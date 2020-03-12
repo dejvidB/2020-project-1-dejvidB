@@ -34,7 +34,7 @@ int main(void){
 		}
 		printf("%d\n", counter);
 	}
-
+	free(temp);
 	map_destroy(map);
 	return 0;
 }
