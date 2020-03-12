@@ -22,7 +22,7 @@ int main(void){
 			node = set_next(set, node);
 		}
 		if (node == SET_EOF){
-			printf("<None> \n");
+			printf("<none>\n");
 		}else{
 			printf("%s\n", (char*)set_node_value(set, node));
 		}
