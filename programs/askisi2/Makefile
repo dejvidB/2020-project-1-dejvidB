@@ -10,7 +10,7 @@ CFLAGS = -Wall -Werror -g -I$(INCLUDE)
 LDFLAGS = -lm
 
 # Αρχεία .o
-OBJS = askisi2.o
+OBJS = askisi2.o $(LIB)/k08.a
 
 # Το εκτελέσιμο πρόγραμμα
 EXEC = askisi2
@@ -18,7 +18,7 @@ EXEC = askisi2
 # Παράμετροι για δοκιμαστική εκτέλεσ
 
 $(EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $(EXEC) $(LDFLAGS)
+	$(CC) $(OBJS) -o $(EXEC) $(CFLAGS)
 
 clean:
 	rm -f $(OBJS) $(EXEC)

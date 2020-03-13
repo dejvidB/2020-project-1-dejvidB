@@ -3,25 +3,22 @@
 // Υλοποίηση του pq_sort module
 //
 ////////////////////////////////
-
+#include <stdio.h>
 #include <stdlib.h>
 #include "pq_sort.h"
 #include "ADTPriorityQueue.h"
 
-int compare(Pointer a, Pointer b)
-{
+int compare(Pointer a, Pointer b){
 	return *(int *)a - *(int *)b;
 }
 
-int *create_ints(int value)
-{
+int *create_ints(int value){
 	int *pointer = malloc(sizeof(int)); // δέσμευση μνήμης
 	*pointer = value;					// αντιγραφή του value στον νέο ακέραιο
 	return pointer;
 }
 
-void pq_sort_vector(Vector vec, CompareFunc compare)
-{
+void pq_sort_vector(Vector vec, CompareFunc compare){
 	// Προσοχή! Μέσα στη συνάρτηση αυτή θα χρειαστεί να αντικαταστήσουμε τα περιεχόμενα του vector. Δε
 	// θέλουμε όμως όσο το κάνουμε αυτό το vector να καλέσει τη destroy! Οπότε αλλάζουμε προσωρινά τη
 	// συνάρτηση destroy σε NULL (αποθηκεύοντας την παλιά τιμή).
@@ -37,8 +34,24 @@ void pq_sort_vector(Vector vec, CompareFunc compare)
 	vector_set_destroy_value(vec, old_destroy);
 }
 
-void pq_sort_list(List list, CompareFunc compare)
-{
+void pq_sort_list(List list, CompareFunc compare){
+	DestroyFunc old_destroy = list_set_destroy_value(list, NULL);
 
-	// ...
+	// κυρίως λειτουργία της συνάρτησης
+	PriorityQueue pq = pqueue_create(compare, free, NULL);
+	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
+		int *current = list_node_value(list, node);
+		pqueue_insert(pq, current);
+	}
+
+	ListNode node = list_first(list);
+	while(node != LIST_EOF){
+		*(int*)list_node_value(list, node) = *(int*)create_ints(*((int *)pqueue_max(pq)));
+		pqueue_remove_max(pq);
+		printf("%d -> ", *(int*)list_node_value(list, node));
+		node = list_next(list, node);
+	}
+
+	// επαναφορά της destroy
+	list_set_destroy_value(list, old_destroy);
 }
