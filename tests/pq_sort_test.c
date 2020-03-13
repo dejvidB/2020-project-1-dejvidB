@@ -43,10 +43,26 @@ void test_pq_sort_vector(void) {
 	vector_destroy(vec);
 }
 
-void test_pq_sort_list(void) {
+void test_pq_sort_list(void){
+	List list = list_create(free);
 
-	// προς υλοποίηση...
+	// προσθήκη τυχαίων αριθμών
+	int N = 10;
+	for (int i = 0; i < N; i++)
+		list_insert_next(list, list_last(list), create_int(rand()));
 
+	// sort
+	pq_sort_list(list, compare_ints);
+
+	// έλεγχος ότι οι τιμές είναι σε αύξουσα σειρά
+	int last = INT_MIN;
+	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
+		int *current = list_node_value(list, node);
+		TEST_CHECK(last <= *current);
+		last = *current;
+	}
+	
+	list_destroy(list);
 }
 
 
