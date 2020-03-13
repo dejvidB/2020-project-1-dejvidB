@@ -6,7 +6,7 @@ INCLUDE = ../../include
 CC = gcc
 
 # Compile options. Το -I<dir> λέει στον compiler να αναζητήσει εκεί include files
-CFLAGS = -Wall -Werror -g -I$(INCLUDE)
+CFLAGS = -Wall -g -I$(INCLUDE)
 LDFLAGS = -lm
 
 # Αρχεία .o
@@ -15,13 +15,21 @@ OBJS = askisi2.o $(LIB)/k08.a
 # Το εκτελέσιμο πρόγραμμα
 EXEC = askisi2
 
-# Παράμετροι για δοκιμαστική εκτέλεσ
+# Παράμετροι για δοκιμαστική εκτέλεση
+ARGS =
 
 $(EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $(EXEC) $(CFLAGS)
+	$(CC) $(OBJS) -o $(EXEC) $(LDFLAGS)
+
+# Για να φτιάξουμε το k08.a, τρέχουμε το make στο lib directory.
+$(LIB)/k08.a:
+	$(MAKE) -C $(LIB) k08.a
 
 clean:
 	rm -f $(OBJS) $(EXEC)
 
 run: $(EXEC)
 	./$(EXEC) $(ARGS)
+
+valgrind: $(EXEC)
+	valgrind ./$(EXEC) $(ARGS)
