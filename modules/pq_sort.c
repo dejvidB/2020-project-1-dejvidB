@@ -8,10 +8,6 @@
 #include "pq_sort.h"
 #include "ADTPriorityQueue.h"
 
-int compare(Pointer a, Pointer b){
-	return *(int *)a - *(int *)b;
-}
-
 int *create_ints(int value){
 	int *pointer = malloc(sizeof(int)); // δέσμευση μνήμης
 	*pointer = value;					// αντιγραφή του value στον νέο ακέραιο
@@ -31,6 +27,7 @@ void pq_sort_vector(Vector vec, CompareFunc compare){
 		pqueue_remove_max(pq);
 	}
 	// επαναφορά της destroy
+	pqueue_destroy(pq);
 	vector_set_destroy_value(vec, old_destroy);
 }
 
@@ -40,18 +37,15 @@ void pq_sort_list(List list, CompareFunc compare){
 	// κυρίως λειτουργία της συνάρτησης
 	PriorityQueue pq = pqueue_create(compare, free, NULL);
 	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
-		int *current = list_node_value(list, node);
+		int *current = create_ints(*(int*)list_node_value(list, node));
 		pqueue_insert(pq, current);
 	}
 
-	ListNode node = list_first(list);
-	while(node != LIST_EOF){
-		*(int*)list_node_value(list, node) = *(int*)create_ints(*((int *)pqueue_max(pq)));
+	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
+		*(int*)list_node_value(list, node) = *((int*)create_ints(*((int *)pqueue_max(pq))));
 		pqueue_remove_max(pq);
-		printf("%d -> ", *(int*)list_node_value(list, node));
-		node = list_next(list, node);
 	}
-
+	pqueue_destroy(pq);
 	// επαναφορά της destroy
 	list_set_destroy_value(list, old_destroy);
 }

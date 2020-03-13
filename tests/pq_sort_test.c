@@ -11,7 +11,11 @@
 
 
 int compare_ints(Pointer a, Pointer b) {
-	return *(int*)b - *(int*)a;
+	return *(int*)a - *(int*)b;
+}
+
+int compare_ints_reverse(Pointer a, Pointer b){
+	return compare_ints(b, a);
 }
 
 int* create_int(int value) {
@@ -26,9 +30,9 @@ void test_pq_sort_vector(void) {
 
 	// προσθήκη τυχαίων αριθμών
 	int N = 10;
-	for (int i = 0; i < N; i++)
+	for (int i = 0; i < N; i++){
 		vector_insert_last(vec, create_int(rand()));
-
+	}
 	// sort
 	pq_sort_vector(vec, compare_ints);
 
@@ -47,17 +51,16 @@ void test_pq_sort_list(void){
 	List list = list_create(free);
 	// προσθήκη τυχαίων αριθμών
 	int N = 10;
-	for (int i = 0; i < N; i++)
-		list_insert_next(list, list_last(list), create_int(rand()));
-
+	for (int i = 0; i < N; i++){
+		int *p = create_int(rand());
+		list_insert_next(list, list_last(list), p);
+	}
 	// sort
-	pq_sort_list(list, compare_ints);
-
+	pq_sort_list(list, compare_ints_reverse);
 	// έλεγχος ότι οι τιμές είναι σε αύξουσα σειρά
 	int last = INT_MIN;
 	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
 		int *current = list_node_value(list, node);
-		printf("--- %d\n", *current);
 		TEST_CHECK(last <= *current);
 		last = *current;
 	}
