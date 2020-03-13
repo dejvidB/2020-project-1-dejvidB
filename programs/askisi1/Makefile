@@ -20,9 +20,6 @@ EXEC = askisi1
 $(EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $(EXEC) $(LDFLAGS)
 
-askisi1.o: askisi1.c
-	$(CC) -c askisi1.c -o askisi1.o
-
 clean:
 	rm -f $(OBJS) $(EXEC)
 
