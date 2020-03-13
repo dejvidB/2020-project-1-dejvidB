@@ -5,16 +5,15 @@
 ////////////////////////////////
 
 #include <stdlib.h>
-
 #include "pq_sort.h"
 #include "ADTPriorityQueue.h"
 
-int compare_ints(Pointer a, Pointer b)
+int compare(Pointer a, Pointer b)
 {
 	return *(int *)a - *(int *)b;
 }
 
-int *create_int(int value)
+int *create_ints(int value)
 {
 	int *pointer = malloc(sizeof(int)); // δέσμευση μνήμης
 	*pointer = value;					// αντιγραφή του value στον νέο ακέραιο
@@ -29,10 +28,9 @@ void pq_sort_vector(Vector vec, CompareFunc compare)
 	DestroyFunc old_destroy = vector_set_destroy_value(vec, NULL);
 
 	// κυρίως λειτουργία της συνάρτησης
-	PriorityQueue pq = pqueue_create(compare_ints, free, vec);
-	for (int i = 0; i < vector_size(vec); i++)
-	{
-		vector_set_at(vec, i, create_int(*((int *)pqueue_max(pq))));
+	PriorityQueue pq = pqueue_create(compare, free, vec);
+	for (int i = vector_size(vec) - 1; i >= 0; i--){
+		vector_set_at(vec, i, create_ints(*((int *)pqueue_max(pq))));
 		pqueue_remove_max(pq);
 	}
 	// επαναφορά της destroy
