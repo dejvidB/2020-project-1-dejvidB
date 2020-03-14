@@ -9,13 +9,8 @@
 
 #include "pq_sort.h"
 
-
 int compare_ints(Pointer a, Pointer b) {
 	return *(int*)a - *(int*)b;
-}
-
-int compare_ints_reverse(Pointer a, Pointer b){
-	return compare_ints(b, a);
 }
 
 int* create_int(int value) {
@@ -23,7 +18,6 @@ int* create_int(int value) {
 	*pointer = value;					// αντιγραφή του value στον νέο ακέραιο
 	return pointer;
 }
-
 
 void test_pq_sort_vector(void) {
 	Vector vec = vector_create(0, free);
@@ -56,7 +50,7 @@ void test_pq_sort_list(void){
 		list_insert_next(list, list_last(list), p);
 	}
 	// sort
-	pq_sort_list(list, compare_ints_reverse);
+	pq_sort_list(list, compare_ints);
 	// έλεγχος ότι οι τιμές είναι σε αύξουσα σειρά
 	int last = INT_MIN;
 	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
