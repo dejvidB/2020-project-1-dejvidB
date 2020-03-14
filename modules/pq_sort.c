@@ -33,19 +33,19 @@ void pq_sort_vector(Vector vec, CompareFunc compare){
 
 void pq_sort_list(List list, CompareFunc compare){
 	DestroyFunc old_destroy = list_set_destroy_value(list, NULL);
-
 	// κυρίως λειτουργία της συνάρτησης
 	PriorityQueue pq = pqueue_create(compare, free, NULL);
-	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
+	for(ListNode node = list_first(list); node != LIST_EOF;){
 		int *current = create_ints(*(int*)list_node_value(list, node));
 		pqueue_insert(pq, current);
 	}
+	
+	list_destroy(list);
+	list = list_create(old_destroy);
 
-	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
-		*(int*)list_node_value(list, node) = *((int*)create_ints(*((int *)pqueue_max(pq))));
+	while(pqueue_size(pq) >= 0){
+		list_insert_next(list, LIST_BOF, *((int*)create_ints(*((int *)pqueue_max(pq)))));
 		pqueue_remove_max(pq);
 	}
 	pqueue_destroy(pq);
-	// επαναφορά της destroy
-	list_set_destroy_value(list, old_destroy);
 }
