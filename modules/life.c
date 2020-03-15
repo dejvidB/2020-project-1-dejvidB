@@ -74,6 +74,7 @@ LifeState life_create_from_rle(char* file){
 
 void life_save_to_rle(LifeState state, char* file){
     //printf("%d - %d\n%d - %d\n", min_x_left, max_x_right, min_y_left, max_y_right);
+    min_x_left = INT_MAX, min_y_left = INT_MAX, max_x_right = INT_MIN, max_y_right = INT_MIN;
     int i = 0;
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
         Set line = map_node_value(state, map_node);
