@@ -82,25 +82,24 @@ LifeState life_create_from_rle(char* file){
 }
 
 void life_save_to_rle(LifeState state, char* file){
-    // printf("\n%d,%d\n", x, y);
-    // FILE *fp;
-    // fp = fopen(file, "w");
-    // assert(fp != NULL);
-    // for(int i = 0; i < x; i++){
-    //     for(int j = 0; j < y; j++){
-    //         LifeCell cell;
-    //         cell.x = i;
-    //         cell.y = j;
-    //         if(set_find(state, &cell) == NULL){
-    //             fprintf(fp, "%c", 'b');     //Dead cell
-    //         }else{
-    //             fprintf(fp, "%c", 'o');     //Alive cell
-    //         }
-    //     }
-    //     fprintf(fp, "%c", '$');             //Change line
-    // }
-    // fprintf(fp, "%s", "!\n");                 //EOF
-    // fclose(fp);
+    FILE *fp;
+    fp = fopen(file, "w");
+    assert(fp != NULL);
+    for(int i = min_x_left; i <= max_x_right; i++){
+        for(int j = min_y_left; i <= max_y_right; j++){
+            LifeCell cell;
+            cell.x = i;
+            cell.y = j;
+            if(life_get_cell(&cell)){
+                fprintf(fp, "%c", 'o');     //Alive cell
+            }else{
+                fprintf(fp, "%c", 'b');     //Dead cell
+            }
+        }
+        fprintf(fp, "%c", '$');             //Change line
+    }
+    fprintf(fp, "%s", "!\n");                 //EOF
+    fclose(fp);
 }
 
 bool life_get_cell(LifeState state, LifeCell cell){
