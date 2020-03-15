@@ -1,8 +1,11 @@
 #include <stdbool.h>
+#include "ADTSet.h"
 
 typedef struct {
 	int x, y;
 } LifeCell;
+
+typedef Set LifeState;
 
 // Δημιουργεί μια κατάσταση του παιχνιδιού όπου όλα τα κελιά είναι νεκρά.
 LifeState life_create();
