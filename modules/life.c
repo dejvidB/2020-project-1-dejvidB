@@ -143,7 +143,7 @@ LifeState life_evolve(LifeState state){
     //Copy old state to new state
     int i = 0;
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
-        Set temp_line = set_create(set_compare, free), line = map_node_value(state, map_node);
+        Set temp_line = set_create((CompareFunc)set_compare, free), line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
             LifeCell *cell = malloc(sizeof(LifeCell));
             cell->x = ((LifeCell*)set_node_value(line, node))->x;
@@ -182,7 +182,7 @@ LifeState life_evolve(LifeState state){
                             + life_get_cell(state, cell_lower_left)
                             + life_get_cell(state, cell_lower)
                             + life_get_cell(state, cell_lower_right);
-            if(set_find(state, &cell) != NULL){
+            if(life_get_cell(state, cell)){
                 //the cell (i, j) is alive
                 if(neighnours < 2 || neighnours > 3){
                     life_set_cell(new_state, cell, false);
