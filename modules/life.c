@@ -82,11 +82,12 @@ LifeState life_create_from_rle(char* file){
 }
 
 void life_save_to_rle(LifeState state, char* file){
+    //printf("%d - %d\n%d - %d\n", min_x_left, max_x_right, min_y_left, max_y_right);
     FILE *fp;
     fp = fopen(file, "w");
     assert(fp != NULL);
     for(int i = min_x_left; i <= max_x_right; i++){
-        for(int j = min_y_left; i <= max_y_right; j++){
+        for(int j = min_y_left; j <= max_y_right; j++){
             LifeCell cell;
             cell.x = i;
             cell.y = j;
