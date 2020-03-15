@@ -26,11 +26,8 @@ void test_life_create_from_rle(void){
 
 void test_life_evolve_and_write(void){
     LifeState state = life_create_from_rle("test.RLE");
-    printf("Life created.\n");
     state = life_evolve(state);
-    printf("Life evolved.\n");
     life_save_to_rle(state, "result.RLE");
-    printf("Life saved.\n");
     TEST_CHECK(state != NULL);
 }
 

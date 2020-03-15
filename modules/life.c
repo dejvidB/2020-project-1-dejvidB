@@ -67,15 +67,6 @@ LifeState life_create_from_rle(char* file){
 	    times = 0;
         }
     }
-    // for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
-    //     Set line = map_node_value(state, map_node);
-    //     for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-    //         //set_insert(new_state, set_node_value(state, node));
-    //         //life_set_cell(new_state, node, true);
-    //         LifeCell *cell = (LifeCell*)set_node_value(line, node);
-    //         printf("Iteration %d,%d\n", cell->x, cell->y);
-    //     }
-    // }
 
     fclose(fp);
     return state;
@@ -83,6 +74,21 @@ LifeState life_create_from_rle(char* file){
 
 void life_save_to_rle(LifeState state, char* file){
     //printf("%d - %d\n%d - %d\n", min_x_left, max_x_right, min_y_left, max_y_right);
+    int i = 0;
+    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
+        Set line = map_node_value(state, map_node);
+        for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
+            LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
+            if(cell.x < min_x_left)
+                min_x_left = cell.x;
+            if(cell.x > max_x_right)
+                max_x_right = cell.x;
+            if(cell.y < min_y_left)
+                min_y_left = cell.y;
+            if(cell.y > max_y_right)
+                max_y_right = cell.y;
+        }
+    }
     FILE *fp;
     fp = fopen(file, "w");
     assert(fp != NULL);
