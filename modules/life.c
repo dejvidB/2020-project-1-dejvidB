@@ -181,7 +181,7 @@ LifeState life_evolve(LifeState state){
 //         }
 //     }
 //    // life_destroy(state);
-//     return new_state;
+     return new_state;
 }
 
 void life_destroy(LifeState state){
