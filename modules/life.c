@@ -90,7 +90,7 @@ void life_save_to_rle(LifeState state, char* file){
             LifeCell cell;
             cell.x = i;
             cell.y = j;
-            if(life_get_cell(&cell)){
+            if(life_get_cell(state, cell)){
                 fprintf(fp, "%c", 'o');     //Alive cell
             }else{
                 fprintf(fp, "%c", 'b');     //Dead cell
