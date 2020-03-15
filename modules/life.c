@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <limits.h>
 
-int x = 0, y = 0;
+int x = 0, y = 0, min_x_left = INT_MAX, min_y_left = INT_MAX, max_x_right = INT_MIN, max_y_right = INT_MIN;
 
 int compare(int *a, int *b){
     return *(int*)a - *(int*)b;
@@ -66,15 +67,15 @@ LifeState life_create_from_rle(char* file){
 	    times = 0;
         }
     }
-    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
-        Set line = map_node_value(state, map_node);
-        for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-            //set_insert(new_state, set_node_value(state, node));
-            //life_set_cell(new_state, node, true);
-            LifeCell *cell = (LifeCell*)set_node_value(line, node);
-            printf("Iteration %d,%d\n", cell->x, cell->y);
-        }
-    }
+    // for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
+    //     Set line = map_node_value(state, map_node);
+    //     for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
+    //         //set_insert(new_state, set_node_value(state, node));
+    //         //life_set_cell(new_state, node, true);
+    //         LifeCell *cell = (LifeCell*)set_node_value(line, node);
+    //         printf("Iteration %d,%d\n", cell->x, cell->y);
+    //     }
+    // }
 
     fclose(fp);
     return state;
@@ -130,58 +131,71 @@ void life_set_cell(LifeState state, LifeCell cell, bool value){
 	    if((line = map_find(state, &cell.x)) != NULL){
             set_remove(line, &cell);
         }
+        if(set_size(line) == 0){
+            set_destroy(line);
+            map_remove(state, line);
+        }
     }
 }
 
 LifeState life_evolve(LifeState state){
     LifeState new_state = life_create();
     //Copy old state to new state
-   // for(SetNode node = set_first(state); node != SET_EOF; node = set_next(state, node)){
-  //     set_insert(new_state, set_node_value(state, node));
-        //life_set_cell(new_state, node, true);
-//        LifeCell cell = *((LifeCell*)set_node_value(state, node));
-//	int x = 0, y = 0;
-	//LifeCell cell = (LifeCell)node;
-//	x = cell.x;
-	//y = cell.y;
-	//printf("-- %d,%d\n", x, y);
-//    }
+    int i = 0;
+    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
+        Set temp_line = set_create(set_compare, free), line = map_node_value(state, map_node);
+        for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
+            LifeCell *cell = malloc(sizeof(LifeCell));
+            cell->x = ((LifeCell*)set_node_value(line, node))->x;
+            cell->y = ((LifeCell*)set_node_value(line, node))->y;
+            set_insert(temp_line, cell);
+            if(cell->x < min_x_left)
+                min_x_left = cell->x;
+            if(cell->x > max_x_right)
+                max_x_right = cell->x;
+            if(cell->y < min_y_left)
+                min_y_left = cell->y;
+            if(cell->y > max_y_right)
+                max_y_right = cell->y;
+        }
+        map_insert(new_state, create_int(i), temp_line);
+    }
 
-//     for(int i = 0; i <= x; i++){
-//         for(int j = 0; j <= y; j++){
-//             LifeCell cell = {i, j};
-//             LifeCell cell_upper_left = {i - 1, j - 1};
-//             LifeCell cell_upper = {i - 1, j};
-//             LifeCell cell_upper_right = {i - 1, j + 1};
+    for(int i = min_x_left - 1; i <= max_x_right + 1; i++){
+        for(int j = min_y_left - 1; j <= max_y_right + 1; j++){
+            LifeCell cell = {i, j};
+            LifeCell cell_upper_left = {i - 1, j - 1};
+            LifeCell cell_upper = {i - 1, j};
+            LifeCell cell_upper_right = {i - 1, j + 1};
 
-//             LifeCell left = {i, j - 1};
-//             LifeCell right = {i, j + 1};
+            LifeCell left = {i, j - 1};
+            LifeCell right = {i, j + 1};
 
-//             LifeCell cell_lower_left = {i + 1, j - 1};
-//             LifeCell cell_lower = {i + 1, j};
-//             LifeCell cell_lower_right = {i + 1, j + 1};
-//             int neighnours =  life_get_cell(state, cell_upper_left) 
-//                             + life_get_cell(state, cell_upper)
-//                             + life_get_cell(state, cell_upper_right)
-//                             + life_get_cell(state, left)
-//                             + life_get_cell(state, right)
-//                             + life_get_cell(state, cell_lower_left)
-//                             + life_get_cell(state, cell_lower)
-//                             + life_get_cell(state, cell_lower_right);
-//             if(set_find(state, &cell) != NULL){
-//                 //the cell (i, j) is alive
-//                 if(neighnours < 2 || neighnours > 3){
-//                     life_set_cell(new_state, cell, false);
-//                 }
-//             }else{
-//                 if(neighnours == 3){
-//                     life_set_cell(new_state, cell, true);
-//                 }
-//             }
-//         }
-//     }
-//    // life_destroy(state);
-     return new_state;
+            LifeCell cell_lower_left = {i + 1, j - 1};
+            LifeCell cell_lower = {i + 1, j};
+            LifeCell cell_lower_right = {i + 1, j + 1};
+            int neighnours =  life_get_cell(state, cell_upper_left) 
+                            + life_get_cell(state, cell_upper)
+                            + life_get_cell(state, cell_upper_right)
+                            + life_get_cell(state, left)
+                            + life_get_cell(state, right)
+                            + life_get_cell(state, cell_lower_left)
+                            + life_get_cell(state, cell_lower)
+                            + life_get_cell(state, cell_lower_right);
+            if(set_find(state, &cell) != NULL){
+                //the cell (i, j) is alive
+                if(neighnours < 2 || neighnours > 3){
+                    life_set_cell(new_state, cell, false);
+                }
+            }else{
+                if(neighnours == 3){
+                    life_set_cell(new_state, cell, true);
+                }
+            }
+        }
+    }
+   // life_destroy(state);
+    return new_state;
 }
 
 void life_destroy(LifeState state){
