@@ -24,10 +24,17 @@ void test_life_create_from_rle(void){
     TEST_CHECK(state != NULL);
 }
 
+void test_life_evolve_and_write(void){
+    LifeState state = life_evolve(life_create_from_rle("test.RLE"));
+    life_save_to_rle(state, "result.RLE");
+    TEST_CHECK(state != NULL);
+}
+
 
 // Λίστα με όλα τα tests προς εκτέλεση
 TEST_LIST = {
-	{ "test_life_create", test_life_create },
-	{ "test_life_create_from_rle", test_life_create_from_rle},
+	//{ "test_life_create", test_life_create },
+	//{ "test_life_create_from_rle", test_life_create_from_rle},
+	{ "test_life_evovle_and_write", test_life_evolve_and_write},
 	{ NULL, NULL } // τερματίζουμε τη λίστα με NULL
 };
