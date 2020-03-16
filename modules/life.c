@@ -95,27 +95,36 @@ void life_save_to_rle(LifeState state, char* file){
     assert(fp != NULL);
     for(int i = min_x_left; i <= max_x_right; i++){
         int times = 0;
-        char last = 0, new = 0;
+        char last = 0, newc = 0;
         for(int j = min_y_left; j <= max_y_right; j++){
             LifeCell cell;
             cell.x = i;
             cell.y = j;
             if(life_get_cell(state, cell)){
-                new  = 'o';
+                newc  = 'o';
+                newc  = 'o';
             }else{
-                new = 'b';
+                newc = 'b';
+                newc = 'b';
             }
             if(last == 0){
-                last = new;
+                last = newc;
                 times = 1;
-            }else if(last == new){
+            }else if(last == newc){
+                times++;
+            }else if(last == newc){
                 times++;
             }else{
                 if(times > 1)
                     fprintf(fp, "%d", times);
                 fprintf(fp, "%c", last);
+		last = newc;
+		times = 1;
             }
         }
+	if(times > 1)
+		fprintf(fp, "%d", times);
+	fprintf(fp, "%c", last);
         if(i != max_x_right) fprintf(fp, "%c", '$');             //Change line
     }
     fprintf(fp, "%s", "!\n");                 //EOF

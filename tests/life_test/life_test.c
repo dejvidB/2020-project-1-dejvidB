@@ -26,7 +26,7 @@ void test_life_create_from_rle(void){
 
 void test_life_evolve_and_write(void){
     LifeState state = life_create_from_rle("test.RLE");
-    state = life_evolve(life_evolve(state));
+    state = life_evolve(state);
     life_save_to_rle(state, "result.RLE");
     TEST_CHECK(state != NULL);
 }
