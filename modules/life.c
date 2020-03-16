@@ -167,22 +167,20 @@ LifeState life_evolve(LifeState state){
     //Copy old state to new state
     int i = 0;
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
-        Set temp_line = set_create((CompareFunc)set_compare, free), line = map_node_value(state, map_node);
+        Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-            LifeCell *cell = malloc(sizeof(LifeCell));
-            cell->x = ((LifeCell*)set_node_value(line, node))->x;
-            cell->y = ((LifeCell*)set_node_value(line, node))->y;
-            set_insert(temp_line, cell);
-            if(cell->x < min_x_left)
-                min_x_left = cell->x;
-            if(cell->x > max_x_right)
-                max_x_right = cell->x;
-            if(cell->y < min_y_left)
-                min_y_left = cell->y;
-            if(cell->y > max_y_right)
-                max_y_right = cell->y;
+            LifeCell cell;
+            cell.x = ((LifeCell*)set_node_value(line, node))->x;
+            cell.y = ((LifeCell*)set_node_value(line, node))->y;
+            if(cell.x < min_x_left)
+                min_x_left = cell.x;
+            if(cell.x > max_x_right)
+                max_x_right = cell.x;
+            if(cell.y < min_y_left)
+                min_y_left = cell.y;
+            if(cell.y > max_y_right)
+                max_y_right = cell.y;
         }
-        map_insert(new_state, create_int(i), temp_line);
     }
 
     for(int i = min_x_left - 1; i <= max_x_right + 1; i++){
