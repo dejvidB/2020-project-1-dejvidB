@@ -3,6 +3,8 @@
 #include "ADTVector.h"
 #include <string.h>
 #include "life.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef char* String;
 
@@ -26,23 +28,23 @@ int main(int argc, char *argv[]) {
     if((delay = atoi(argv[9])) < 0)
         return 1;
 
-    String state = strdup(argv[1]);
-    int top = atoi(argv[2]), left = atoi(argv[3]), bottom = atoi(argv[4]), right = atoi(argv[5]);
+    String state_file = strdup(argv[1]);
+   // int top = atoi(argv[2]), left = atoi(argv[3]), bottom = atoi(argv[4]), right = atoi(argv[5]);
     
     String target_gif = strdup(argv[10]);
 
-    LifeState state = life_create_from_rle(state);
+    LifeState state = life_create_from_rle(state_file);
 
 	// Μεγέθη
-	int size = 128;
-	int cell_size = 5;
+	int size = 50;
+	//int cell_size = 50;
 
 	// Δημιουργία ενός GIF και ενός bitmap στη μνήμη
 	GIF* gif = gif_create(size, size);
 	Bitmap* bitmap = bm_create(size, size);
 
 	// Default καθυστέρηση μεταξύ των frames, σε εκατοστά του δευτερολέπτου
-	gif->default_delay = 10;
+	gif->default_delay = 50;
 
 	// Δημιουργούμε ενα animation με ένα "cell" το οποίο μετακινείται από τη δεξιά-πάνω
 	// γωνία προς την κάτω-αριστερά. Το cell μετακινείται ένα pixel τη φορά, οπότε το animation
@@ -50,18 +52,20 @@ int main(int argc, char *argv[]) {
 
     //Απεικόνιση αρχικής κατάστασης
     //πρώτα μαυρίζουμε ολόκληρο το bitmap
-	bm_set_color(bitmap, bm_atoi("black"));
-	bm_clear(bitmap);
+    bm_set_color(bitmap, bm_atoi("black"));
+    bm_clear(bitmap);
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
             LifeCell cell;
             cell.x = ((LifeCell*)set_node_value(line, node))->x;
             cell.y = ((LifeCell*)set_node_value(line, node))->y;
+	    printf("%d, %d\n", cell.x, cell.y);
             // Και μετά ζωγραφίζουμε ένα άσπρο τετράγωνο με αρχή το
             // σημείο (i,i) και τέλος το (i+cell_size, i+cell_size)
             bm_set_color(bitmap, bm_atoi("white"));
-            bm_fillrect(bitmap, cell.x + size/2, cell.y + size/2, cell.x + size/2 + cell_size, cell.y + size/2 + cell_size);
+           //bm_fillrect(bitmap, cell.x + size/2, cell.y + size/2, cell.x + size/2 + cell_size, cell.y + size/2 + cell_size);
+	    bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
             // Τέλος προσθέτουμε το bitmap σαν frame στο GIF (τα περιεχόμενα αντιγράφονται)
             gif_add_frame(gif, bitmap);
         }
@@ -72,6 +76,11 @@ int main(int argc, char *argv[]) {
         for(int j = 0; j < speed; j++){
             state = life_evolve(state);
         }
+        bm_set_color(bitmap, bm_atoi("black"));
+	bm_clear(bitmap);
+        //bm_fillrect(bitmap, cell.x + size/2, cell.y + size/2, cell.x + size/2 + cell_size, cell.y + size/2 + cell_size);
+        //bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
+
         for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
             Set line = map_node_value(state, map_node);
             for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
@@ -81,7 +90,7 @@ int main(int argc, char *argv[]) {
                 // Και μετά ζωγραφίζουμε ένα άσπρο τετράγωνο με αρχή το
                 // σημείο (i,i) και τέλος το (i+cell_size, i+cell_size)
                 bm_set_color(bitmap, bm_atoi("white"));
-                bm_fillrect(bitmap, cell.x + size/2, cell.y + size/2, cell.x + size/2 + cell_size, cell.y + size/2 + cell_size);
+                bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
                 // Τέλος προσθέτουμε το bitmap σαν frame στο GIF (τα περιεχόμενα αντιγράφονται)
                 gif_add_frame(gif, bitmap);
             }
