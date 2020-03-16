@@ -109,7 +109,7 @@ void life_save_to_rle(LifeState state, char* file){
                 last = new;
                 times = 1;
             }else if(last == new){
-                times++
+                times++;
             }else{
                 if(times > 1)
                     fprintf(fp, "%d", times);
