@@ -94,17 +94,29 @@ void life_save_to_rle(LifeState state, char* file){
     fp = fopen(file, "w");
     assert(fp != NULL);
     for(int i = min_x_left; i <= max_x_right; i++){
+        int times = 0;
+        char last = 0, new = 0;
         for(int j = min_y_left; j <= max_y_right; j++){
             LifeCell cell;
             cell.x = i;
             cell.y = j;
             if(life_get_cell(state, cell)){
-                fprintf(fp, "%c", 'o');     //Alive cell
+                new  = 'o';
             }else{
-                fprintf(fp, "%c", 'b');     //Dead cell
+                new = 'b';
+            }
+            if(last == 0){
+                last = new;
+                times = 1;
+            }else if(last == new){
+                times++
+            }else{
+                if(times > 1)
+                    fprintf(fp, "%d", times);
+                fprintf(fp, "%c", last);
             }
         }
-        fprintf(fp, "%c", '$');             //Change line
+        if(i != max_x_right) fprintf(fp, "%c", '$');             //Change line
     }
     fprintf(fp, "%s", "!\n");                 //EOF
     fclose(fp);
