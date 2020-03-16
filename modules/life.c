@@ -228,8 +228,8 @@ LifeState life_evolve(LifeState state){
 
 void life_destroy(LifeState state){
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
-       Set line = map_node_value(state, map_node);
-       set_destroy(line);
+        Set line = map_node_value(state, map_node);
+        set_destroy(line);
     }
     map_destroy(state);
 }
