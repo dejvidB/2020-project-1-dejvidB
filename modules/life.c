@@ -23,8 +23,7 @@ int *create_int(int value){
 }
 
 LifeState life_create(){
-    return map_create((CompareFunc)compare, NULL, NULL);
-    //REMINDER: SET DESTROY VALUE
+    return map_create((CompareFunc)compare, free, NULL);
 }
 
 LifeState life_create_from_rle(char* file){
@@ -51,7 +50,7 @@ LifeState life_create_from_rle(char* file){
             //INSERT IN MAP WHILE MOVING $Y, BUT KEEPING X THE SAME
             while(times--){
                 LifeCell cell = {x, y};
-		        life_set_cell(state, cell, true);
+		life_set_cell(state, cell, true);
                 y++;
             }
             times = 1;   //Reset times to be used in next iterations
@@ -129,6 +128,7 @@ void life_save_to_rle(LifeState state, char* file){
     }
     fprintf(fp, "%s", "!\n");                 //EOF
     fclose(fp);
+    life_destroy(state);
 }
 
 bool life_get_cell(LifeState state, LifeCell cell){
@@ -156,7 +156,7 @@ void life_set_cell(LifeState state, LifeCell cell, bool value){
             set_insert(line, new_cell);
         }
     }else{
-	    if((line = map_find(state, &cell.x)) != NULL){
+	if((line = map_find(state, &cell.x)) != NULL){
             set_remove(line, &cell);
         }
         if(set_size(line) == 0){
@@ -222,10 +222,14 @@ LifeState life_evolve(LifeState state){
             }
         }
     }
-   // life_destroy(state);
+    life_destroy(state);
     return new_state;
 }
 
 void life_destroy(LifeState state){
+    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
+       Set line = map_node_value(state, map_node);
+       set_destroy(line);
+    }
     map_destroy(state);
 }
