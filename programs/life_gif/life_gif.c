@@ -9,22 +9,19 @@
 typedef char* String;
 
 int main(int argc, char *argv[]) {
-    if(argc < 11)
-        return 1;
-    
-    int frames;
+    int frames = 1;
     if((frames = atoi(argv[6])) < 1) //frames >= 1
         return 1;
 
-    float zoom;
+    float zoom = 0;
     if((zoom = atof(argv[7]) < 0))  //zoom
         return 1;
 
-    int speed;
+    int speed = 1;
     if((speed = atoi(argv[8])) < 1)
         return 1;
 
-    int delay;
+    int delay = 0;
     if((delay = atoi(argv[9])) < 0)
         return 1;
 
@@ -60,12 +57,12 @@ int main(int argc, char *argv[]) {
             LifeCell cell;
             cell.x = ((LifeCell*)set_node_value(line, node))->x;
             cell.y = ((LifeCell*)set_node_value(line, node))->y;
-	    printf("%d, %d\n", cell.x, cell.y);
+	        //printf("%d, %d\n", cell.x, cell.y);
             // Και μετά ζωγραφίζουμε ένα άσπρο τετράγωνο με αρχή το
             // σημείο (i,i) και τέλος το (i+cell_size, i+cell_size)
             bm_set_color(bitmap, bm_atoi("white"));
            //bm_fillrect(bitmap, cell.x + size/2, cell.y + size/2, cell.x + size/2 + cell_size, cell.y + size/2 + cell_size);
-	    bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
+	        bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
             // Τέλος προσθέτουμε το bitmap σαν frame στο GIF (τα περιεχόμενα αντιγράφονται)
             gif_add_frame(gif, bitmap);
         }
@@ -77,7 +74,7 @@ int main(int argc, char *argv[]) {
             state = life_evolve(state);
         }
         bm_set_color(bitmap, bm_atoi("black"));
-	bm_clear(bitmap);
+	    bm_clear(bitmap);
         //bm_fillrect(bitmap, cell.x + size/2, cell.y + size/2, cell.x + size/2 + cell_size, cell.y + size/2 + cell_size);
         //bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
 
@@ -97,6 +94,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    life_save_to_rle(state, "result");
 	// Αποθήκευση σε αρχείο
 	gif_save(gif, target_gif);
 
