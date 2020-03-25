@@ -5,14 +5,14 @@
 #include <assert.h>
 #include <limits.h>
 
-int x = 0, y = 0, min_x_left = INT_MAX, min_y_left = INT_MAX, max_x_right = INT_MIN, max_y_right = INT_MIN;
+int x = 0, y = 0, min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
 
 int compare(int *a, int *b){
-    return *(int*)a - *(int*)b;
+    return *(int*)b - *(int*)a;
 }
 
 int set_compare(LifeCell *a, LifeCell *b){
-    return a->y - b->y;
+    return b->y - a->y;
 }
 
 int *create_int(int value){
@@ -72,30 +72,29 @@ LifeState life_create_from_rle(char* file){
 }
 
 void life_save_to_rle(LifeState state, char* file){
-    //printf("%d - %d\n%d - %d\n", min_x_left, max_x_right, min_y_left, max_y_right);
-    min_x_left = INT_MAX, min_y_left = INT_MAX, max_x_right = INT_MIN, max_y_right = INT_MIN;
+    min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
     int i = 0;
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
         Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
             LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-            if(cell.x < min_x_left)
-                min_x_left = cell.x;
-            if(cell.x > max_x_right)
-                max_x_right = cell.x;
-            if(cell.y < min_y_left)
-                min_y_left = cell.y;
-            if(cell.y > max_y_right)
-                max_y_right = cell.y;
+            if(cell.x < min_x)
+                min_x = cell.x;
+            if(cell.x > max_x)
+                max_x = cell.x;
+            if(cell.y < min_y)
+                min_y = cell.y;
+            if(cell.y > max_y)
+                max_y = cell.y;
         }
     }
     FILE *fp;
     fp = fopen(file, "w");
     assert(fp != NULL);
-    for(int i = min_x_left; i <= max_x_right; i++){
+    for(int i = min_x; i <= max_x; i++){
         int times = 0;
         char last = 0, newc = 0;
-        for(int j = min_y_left; j <= max_y_right; j++){
+        for(int j = min_y; j <= max_y; j++){
             LifeCell cell;
             cell.x = i;
             cell.y = j;
@@ -124,7 +123,7 @@ void life_save_to_rle(LifeState state, char* file){
 	if(times > 1)
 		fprintf(fp, "%d", times);
 	fprintf(fp, "%c", last);
-        if(i != max_x_right) fprintf(fp, "%c", '$');             //Change line
+        if(i != max_x) fprintf(fp, "%c", '$');             //Change line
     }
     fprintf(fp, "%s", "!\n");                 //EOF
     fclose(fp);
@@ -140,30 +139,31 @@ bool life_get_cell(LifeState state, LifeCell cell){
 }
 
 void life_set_cell(LifeState state, LifeCell cell, bool value){
-    Set line;
+    Set line = map_find(state, &cell.x);
     if(value){
-        if((line = map_find(state, &cell.x)) == NULL){  //If x line does not exist
+        LifeCell* new_cell = malloc(sizeof(LifeCell));
+        new_cell->x = cell.x;
+        new_cell->y = cell.y;
+        if(line == NULL){  //If x line does not exist
             line = set_create((CompareFunc)set_compare, free);
-            LifeCell* new_cell = malloc(sizeof(LifeCell));
-            new_cell->x = cell.x;
-            new_cell->y = cell.y;
             set_insert(line, new_cell);
             map_insert(state, create_int(cell.x), line);
         }else{                                          //If x line exists
-            LifeCell* new_cell = malloc(sizeof(LifeCell));
-            new_cell->x = cell.x;
-            new_cell->y = cell.y;
-            set_insert(line, new_cell);
-        }
-    }else{
-	if((line = map_find(state, &cell.x)) != NULL){
-            set_remove(line, &cell);
-        }
-        if(set_size(line) == 0){
-            set_destroy(line);
-            map_remove(state, line);
+            if(set_find(line, &cell) == NULL)
+                set_insert(line, new_cell);
+            else
+                free(new_cell);
         }
     }
+    //else{
+    //     if(line != NULL){
+    //             set_remove(line, &cell);
+    //         }
+    //         if(set_size(line) == 0){
+    //             set_destroy(line);
+    //             map_remove(state, line);
+    //         }
+    // }
 }
 
 LifeState life_evolve(LifeState state){
@@ -171,26 +171,22 @@ LifeState life_evolve(LifeState state){
     //Copy old state to new state
     int i = 0;
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
-        Set temp_line = set_create((CompareFunc)set_compare, free), line = map_node_value(state, map_node);
+        Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-            LifeCell *cell = malloc(sizeof(LifeCell));
-            cell->x = ((LifeCell*)set_node_value(line, node))->x;
-            cell->y = ((LifeCell*)set_node_value(line, node))->y;
-            set_insert(temp_line, cell);
-            if(cell->x < min_x_left)
-                min_x_left = cell->x;
-            if(cell->x > max_x_right)
-                max_x_right = cell->x;
-            if(cell->y < min_y_left)
-                min_y_left = cell->y;
-            if(cell->y > max_y_right)
-                max_y_right = cell->y;
+            LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
+            if(cell.x < min_x)
+                min_x = cell.x;
+            if(cell.x > max_x)
+                max_x = cell.x;
+            if(cell.y < min_y)
+                min_y = cell.y;
+            if(cell.y > max_y)
+                max_y = cell.y;
         }
-        map_insert(new_state, create_int(i), temp_line);
     }
 
-    for(int i = min_x_left - 1; i <= max_x_right + 1; i++){
-        for(int j = min_y_left - 1; j <= max_y_right + 1; j++){
+    for(int i = min_x - 1; i <= max_x + 1; i++){
+        for(int j = min_y - 1; j <= max_y + 1; j++){
             LifeCell cell = {i, j};
             LifeCell cell_upper_left = {i - 1, j - 1};
             LifeCell cell_upper = {i - 1, j};
