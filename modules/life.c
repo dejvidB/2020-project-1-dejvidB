@@ -210,7 +210,9 @@ LifeState life_evolve(LifeState state){
                 //the cell (i, j) is alive
                 if(neighnours < 2 || neighnours > 3){
                     life_set_cell(new_state, cell, false);
-                }
+                }else{
+		    life_set_cell(new_state, cell, true);
+		}
             }else{
                 if(neighnours == 3){
                     life_set_cell(new_state, cell, true);
