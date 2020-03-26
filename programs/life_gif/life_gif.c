@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
             for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
                 LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
                 bm_set_color(bitmap, bm_atoi("black"));
-                bm_putpixel(bitmap, cell.x + + (max_x - min_x)/2, cell.y + (max_y - min_y)/2);
+                bm_putpixel(bitmap, cell.x + 240, cell.y + 135);
             }
         }
         gif_add_frame(gif, bitmap);
