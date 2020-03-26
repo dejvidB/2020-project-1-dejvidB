@@ -27,6 +27,7 @@ LifeState life_create(){
 }
 
 LifeState life_create_from_rle(char* file){
+    min_x = 0, min_y = 0, max_x = 0, max_y = 0;
     LifeState state = life_create();
     FILE *fp;
     fp = fopen(file, "rb");
@@ -50,7 +51,7 @@ LifeState life_create_from_rle(char* file){
             //INSERT IN MAP WHILE MOVING $Y, BUT KEEPING X THE SAME
             while(times--){
                 LifeCell cell = {x, y};
-		life_set_cell(state, cell, true);
+		        life_set_cell(state, cell, true);
                 y++;
             }
             times = 1;   //Reset times to be used in next iterations
@@ -62,11 +63,12 @@ LifeState life_create_from_rle(char* file){
             times = 1;   //Reset times to be used in next iterations
         }else if(c == '$'){        //Check if we have to change line
             x++;                           //and prepare coordinates
+            max_y = y > max_y ? y : max_y;
             y = 0;
 	    times = 0;
         }
     }
-
+    max_x = x;
     fclose(fp);
     return state;
 }
