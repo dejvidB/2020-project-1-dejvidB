@@ -133,36 +133,29 @@ bool life_get_cell(LifeState state, LifeCell cell){
     Set line;
     if((line = map_find(state, &cell.x)) != NULL)
         if(set_find(line, &cell))
-            return 1;
-    return 0;
+            return true;
+    return false;
 }
 
 void life_set_cell(LifeState state, LifeCell cell, bool value){
-    Set line = map_find(state, &cell.x);
     if(value){
-        LifeCell* new_cell = malloc(sizeof(LifeCell));
-        new_cell->x = cell.x;
-        new_cell->y = cell.y;
+        Set line = map_find(state, &cell.x);
         if(line == NULL){  //If x line does not exist
+            LifeCell* new_cell = malloc(sizeof(LifeCell));
+            new_cell->x = cell.x;
+            new_cell->y = cell.y;
             line = set_create((CompareFunc)set_compare, free);
             set_insert(line, new_cell);
             map_insert(state, create_int(cell.x), line);
         }else{                                          //If x line exists
-            if(set_find(line, &cell) == NULL)
+            //if(set_find(line, &cell) == NULL){
+                LifeCell* new_cell = malloc(sizeof(LifeCell));
+                new_cell->x = cell.x;
+                new_cell->y = cell.y;
                 set_insert(line, new_cell);
-            else
-                free(new_cell);
+            //}
         }
     }
-    //else{
-    //     if(line != NULL){
-    //             set_remove(line, &cell);
-    //         }
-    //         if(set_size(line) == 0){
-    //             set_destroy(line);
-    //             map_remove(state, line);
-    //         }
-    // }
 }
 
 LifeState life_evolve(LifeState state){
@@ -171,48 +164,37 @@ LifeState life_evolve(LifeState state){
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-            LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-            for(int x = cell.x - 1; x <= cell.x + 1; x++)
-                for(int y = cell.y - 1; y <= cell.y + 1; y++){
-                    if(cell.x < min_x)
-                        min_x = cell.x;
-                    if(cell.x > max_x)
-                        max_x = cell.x;
-                    if(cell.y < min_y)
-                        min_y = cell.y;
-                    if(cell.y > max_y)
-                        max_y = cell.y;
+            LifeCell current_cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
+            for(int x = current_cell.x - 1; x <= current_cell.x + 1; x++){
+                for(int y = current_cell.y - 1; y <= current_cell.y + 1; y++){
                     LifeCell cell = {x, y};
-                    LifeCell cell_upper_left = {x - 1, y - 1};
-                    LifeCell cell_upper = {x - 1, y};
-                    LifeCell cell_upper_right = {x - 1, y + 1};
-                    LifeCell left = {x, y - 1};
-                    LifeCell right = {x, y + 1};
-                    LifeCell cell_lower_left = {x + 1, y - 1};
-                    LifeCell cell_lower = {x + 1, y};
-                    LifeCell cell_lower_right = {x + 1, y + 1};
-                    int neighnours =  life_get_cell(state, cell_upper_left) 
-                                    + life_get_cell(state, cell_upper)
-                                    + life_get_cell(state, cell_upper_right)
-                                    + life_get_cell(state, left)
-                                    + life_get_cell(state, right)
-                                    + life_get_cell(state, cell_lower_left)
-                                    + life_get_cell(state, cell_lower)
-                                    + life_get_cell(state, cell_lower_right);
-                    if(life_get_cell(state, cell)){
-                        //the cell (i, j) is alive
-                        if(neighnours < 2 || neighnours > 3){
-                            life_set_cell(new_state, cell, false);
-                        }else{
-                            if(x == cell.x && y == cell.y)
-                                life_set_cell(new_state, cell, true);
+                    char neighbours = 0;
+                    for(int i = x - 1; i <= x + 1; i++){
+                        for(int j = y - 1; j <= y + 1; j++){
+                            if(i != x && j != y){
+                                LifeCell neigh = {i, j};
+                                neighbours += life_get_cell(state, neigh);
+                            }
+                            if(neighbours == 4)
+                                break;
                         }
+                        if(neighbours == 4){
+                            break;
+                        }
+                    }
+                    if(neighbours < 2 || neighbours > 3)
+                        continue;
+                    if(life_get_cell(state, cell)){            //the cell (i, j) is alive
+                        //if(neighbours >= 2 && neighbours <= 3){
+                            life_set_cell(new_state, cell, true);
+                        //}
                     }else{
-                        if(neighnours == 3){
+                        if(neighbours == 3){
                             life_set_cell(new_state, cell, true);
                         }
                     }
                 }
+            }
         }
     }
     //life_destroy(state);
@@ -226,3 +208,4 @@ void life_destroy(LifeState state){
     //}
     //map_destroy(state);
 }
+
