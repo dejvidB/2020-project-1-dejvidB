@@ -37,22 +37,25 @@ int main(int argc, char *argv[]) {
 	//int cell_size = 50;
 
 	// Δημιουργία ενός GIF και ενός bitmap στη μνήμη
-	GIF* gif = gif_create(480, 270);
-	Bitmap* bitmap = bm_create(480, 270);
+	GIF* gif = gif_create(300, 300);
+	Bitmap* bitmap = bm_create(300, 300);
 
 	// Default καθυστέρηση μεταξύ των frames, σε εκατοστά του δευτερολέπτου
-	gif->default_delay = 10;
+	gif->default_delay = 1;
     //gif->default_delay = delay;
 
     for(int i = 0; i < frames; i++){
+	//printf("new frame\n");
         bm_set_color(bitmap, bm_atoi("white"));
         bm_clear(bitmap);
         for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
             Set line = map_node_value(state, map_node);
+	    //printf("---------\n");
             for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
                 LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
+		//printf("%d, %d\n", cell.x, cell.y);
                 bm_set_color(bitmap, bm_atoi("black"));
-                bm_putpixel(bitmap, cell.x + 240, cell.y + 135);
+                bm_putpixel(bitmap, cell.y + 130, cell.x + 130);
             }
         }
         gif_add_frame(gif, bitmap);
@@ -60,9 +63,9 @@ int main(int argc, char *argv[]) {
         for(int j = 0; j < speed; j++){
             state = life_evolve(state);
         }
-    }
+     }
 
-    //life_save_to_rle(state, "result");
+    	life_save_to_rle(state, "result");
 	// Αποθήκευση σε αρχείο
 	gif_save(gif, target_gif);
 

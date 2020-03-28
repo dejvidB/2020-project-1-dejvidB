@@ -28,8 +28,7 @@ LifeState life_create(){
 LifeState life_create_from_rle(char* file){
     min_x = 0, min_y = 0, max_x = 0, max_y = 0;
     LifeState state = life_create();
-    FILE *fp;
-    fp = fopen(file, "rb");
+    FILE *fp = fopen(file, "rb");
     assert(fp != NULL);
     char c;
     int times = 0;
@@ -39,30 +38,35 @@ LifeState life_create_from_rle(char* file){
             while(c != '\n')
                 c = fgetc(fp);
             continue;
-        }else if(c >= '1' && c <= '9'){ //Check if input is a number
+        }else if(c >= '0' && c <= '9'){ //Check if input is a number
             times *= 10;                       //Convert char to int
             times += (c - '0');
-        }else if(c == 'o'){          //Check if input is a live cell
-            if(times == 0)
-                times = 1;
+        }else if(c == 'o'){         //Check if input is a live cell
             //INSERT IN MAP WHILE MOVING $Y, BUT KEEPING X THE SAME
+	    if(times == 0)
+		times = 1;
+	    //printf("times = %d\n", times);
             while(times--){
+                //printf("%d, %d\n", x, y);
                 LifeCell cell = {x, y};
                 life_set_cell(state, cell, true);
                 y++;
             }
-            times = 1;   //Reset times to be used in next iterations
+            times = 0;   //Reset times to be used in next iterations
         }else if(c == 'b'){
             if(times == 0)
-                times = 1;
+		times = 1;
             while(times--)
                 y++;               //Move $Y when reading dead cells
-            times = 1;   //Reset times to be used in next iterations
+            times = 0;   //Reset times to be used in next iterations
         }else if(c == '$'){        //Check if we have to change line
-            x++;                           //and prepare coordinates
+            if(times == 0)
+		times = 1;
+            while(times--)
+                x++;                       //and prepare coordinates
             max_y = y > max_y ? y : max_y;
             y = 0;
-        times = 0;
+            times = 0;
         }
     }
     max_x = x;
@@ -99,9 +103,7 @@ void life_save_to_rle(LifeState state, char* file){
             cell.y = j;
             if(life_get_cell(state, cell)){
                 newc  = 'o';
-                newc  = 'o';
             }else{
-                newc = 'b';
                 newc = 'b';
             }
             if(last == 0){
@@ -160,22 +162,23 @@ void life_set_cell(LifeState state, LifeCell cell, bool value){
 
 LifeState life_evolve(LifeState state){
     LifeState new_state = life_create();
-
+    //printf("Called life_evolve\n");
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
             LifeCell current_cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
+	    //printf("%d, %d\n", current_cell.x, current_cell.y);
             for(int x = current_cell.x - 1; x <= current_cell.x + 1; x++){
                 for(int y = current_cell.y - 1; y <= current_cell.y + 1; y++){
                     LifeCell cell = {x, y};
                     char neighbours = 0;
                     for(int i = x - 1; i <= x + 1; i++){
                         for(int j = y - 1; j <= y + 1; j++){
-                            if(i != x && j != y){
+                            if(i != x || j != y){
                                 LifeCell neigh = {i, j};
                                 neighbours += life_get_cell(state, neigh);
                             }
-                            if(neighbours == 4)
+                           if(neighbours == 4)
                                 break;
                         }
                         if(neighbours == 4){
@@ -187,7 +190,7 @@ LifeState life_evolve(LifeState state){
                     if(life_get_cell(state, cell)){            //the cell (i, j) is alive
                         //if(neighbours >= 2 && neighbours <= 3){
                             life_set_cell(new_state, cell, true);
-                        //}
+                        //
                     }else{
                         if(neighbours == 3){
                             life_set_cell(new_state, cell, true);
