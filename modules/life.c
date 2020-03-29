@@ -26,58 +26,51 @@ LifeState life_create(){
 }
 
 LifeState life_create_from_rle(char* file){
-    min_x = 0, min_y = 0, max_x = 0, max_y = 0;
     LifeState state = life_create();
     FILE *fp = fopen(file, "rb");
     assert(fp != NULL);
     char c;
     int times = 0;
     while((c = fgetc(fp)) != '!'){
-        //Skip unnecessary lines
         if(c == '#' || c == 'x'){
-            while(c != '\n')
+            while(c != '\n')                        //Skip unnecessary lines by fgetting till \n
                 c = fgetc(fp);
-            continue;
-        }else if(c >= '0' && c <= '9'){ //Check if input is a number
-            times *= 10;                       //Convert char to int
+        }else if(c >= '0' && c <= '9'){             //Character is a number if its ASCII code lies between '0'-'9'
+            times *= 10;
             times += (c - '0');
-        }else if(c == 'o'){         //Check if input is a live cell
-            //INSERT IN MAP WHILE MOVING $Y, BUT KEEPING X THE SAME
-	    if(times == 0)
-		times = 1;
-	    //printf("times = %d\n", times);
+        }else if(c == 'o'){
+            if(times == 0)
+                times = 1;
             while(times--){
-                //printf("%d, %d\n", x, y);
                 LifeCell cell = {x, y};
-                life_set_cell(state, cell, true);
-                y++;
+                life_set_cell(state, cell, true);   //IMPORTANT: SAVE ONLY LIVING CELLS
+                y++;                                //Increase y coordinate for future use
             }
-            times = 0;   //Reset times to be used in next iterations
+            times = 0;                              //Reset times
         }else if(c == 'b'){
             if(times == 0)
-		times = 1;
+                times = 1;
             while(times--)
-                y++;               //Move $Y when reading dead cells
-            times = 0;   //Reset times to be used in next iterations
-        }else if(c == '$'){        //Check if we have to change line
+                y++;                                //Skip dead cells by increasing y
+            times = 0;                              //Reset times
+        }else if(c == '$'){
             if(times == 0)
-		times = 1;
+                times = 1;
             while(times--)
-                x++;                       //and prepare coordinates
-            max_y = y > max_y ? y : max_y;
+                x++;                                //Increase x, cause line changed ($)
             y = 0;
             times = 0;
         }
     }
-    max_x = x;
     fclose(fp);
     return state;
 }
 
 void life_save_to_rle(LifeState state, char* file){
     min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
-    int i = 0;
-    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node), i++){
+
+    //Find state limits
+    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
             LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
@@ -91,16 +84,16 @@ void life_save_to_rle(LifeState state, char* file){
                 max_y = cell.y;
         }
     }
-    FILE *fp;
-    fp = fopen(file, "w");
+
+    FILE *fp = fopen(file, "w");
     assert(fp != NULL);
-    for(int i = min_x; i <= max_x; i++){
+    for(int x = min_x; x <= max_x; x++){
         int times = 0;
-        char last = 0, newc = 0;
-        for(int j = min_y; j <= max_y; j++){
+        char last = 0, newc = 0;                    //Keep track of old and new charater
+        for(int y = min_y; y <= max_y; y++){
             LifeCell cell;
-            cell.x = i;
-            cell.y = j;
+            cell.x = x;
+            cell.y = y;
             if(life_get_cell(state, cell)){
                 newc  = 'o';
             }else{
@@ -109,26 +102,25 @@ void life_save_to_rle(LifeState state, char* file){
             if(last == 0){
                 last = newc;
                 times = 1;
-            }else if(last == newc){
-                times++;
-            }else if(last == newc){
+            }else if(last == newc){                 //Count consecutive alive or dead cells
                 times++;
             }else{
                 if(times > 1)
                     fprintf(fp, "%d", times);
                 fprintf(fp, "%c", last);
-		last = newc;
-		times = 1;
+                last = newc;
+                times = 1;
             }
         }
-	if(times > 1)
-		fprintf(fp, "%d", times);
-	fprintf(fp, "%c", last);
-        if(i != max_x) fprintf(fp, "%c", '$');             //Change line
+
+        if(times > 1)
+            fprintf(fp, "%d", times);
+        fprintf(fp, "%c", last);
+        if(x != max_x) fprintf(fp, "%c", '$');      //Change line, only if we are not on the last line
     }
-    fprintf(fp, "%s", "!\n");                 //EOF
+    fprintf(fp, "%s", "!\n");
     fclose(fp);
-    //life_destroy(state);
+    life_destroy(state);
 }
 
 bool life_get_cell(LifeState state, LifeCell cell){
@@ -140,59 +132,63 @@ bool life_get_cell(LifeState state, LifeCell cell){
 }
 
 void life_set_cell(LifeState state, LifeCell cell, bool value){
+    Set line = map_find(state, &cell.x);
     if(value){
-        Set line = map_find(state, &cell.x);
-        if(line == NULL){  //If x line does not exist
+        if(line == NULL){                                       //If x line does not exist
+            LifeCell* new_cell = malloc(sizeof(LifeCell));      //Allocate memory for new LifeCell and copy cell coordinates
+            new_cell->x = cell.x;
+            new_cell->y = cell.y;
+            line = set_create((CompareFunc)set_compare, NULL);  //Create new line, insert LifeCell in it and insert line in map
+            set_insert(line, new_cell);
+            map_insert(state, create_int(cell.x), line);
+        }else{
             LifeCell* new_cell = malloc(sizeof(LifeCell));
             new_cell->x = cell.x;
             new_cell->y = cell.y;
-            line = set_create((CompareFunc)set_compare, free);
             set_insert(line, new_cell);
-            map_insert(state, create_int(cell.x), line);
-        }else{                                          //If x line exists
-            //if(set_find(line, &cell) == NULL){
-                LifeCell* new_cell = malloc(sizeof(LifeCell));
-                new_cell->x = cell.x;
-                new_cell->y = cell.y;
-                set_insert(line, new_cell);
-            //}
+        }
+    }else{
+        if(line != NULL){
+            free(set_find(line, &cell));
+            if(set_size(line) == 0){
+                set_destroy(line);
+                int* key  = map_node_key(state, map_find_node(state, &(cell.y)));
+                free(key);
+            }
         }
     }
 }
 
 LifeState life_evolve(LifeState state){
     LifeState new_state = life_create();
-    //printf("Called life_evolve\n");
+    
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
             LifeCell current_cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-	    //printf("%d, %d\n", current_cell.x, current_cell.y);
+
             for(int x = current_cell.x - 1; x <= current_cell.x + 1; x++){
                 for(int y = current_cell.y - 1; y <= current_cell.y + 1; y++){
                     LifeCell cell = {x, y};
                     char neighbours = 0;
-                    for(int i = x - 1; i <= x + 1; i++){
-                        for(int j = y - 1; j <= y + 1; j++){
+                    for(int i = x - 1; i <= x + 1, neighbours < 4; i++){
+                        for(int j = y - 1; j <= y + 1, neighbours < 4; j++){
                             if(i != x || j != y){
-                                LifeCell neigh = {i, j};
-                                neighbours += life_get_cell(state, neigh);
+                                LifeCell neighbour = {i, j};
+                                neighbours += life_get_cell(state, neighbour);  //If life_get_cell returns 1(true), then neighbour is alive
                             }
-                           if(neighbours == 4)
-                                break;
-                        }
-                        if(neighbours == 4){
-                            break;
                         }
                     }
-                    if(neighbours < 2 || neighbours > 3)
+                    if(neighbours < 2 || neighbours > 3)             //There can't be any living cell with neighbours < 2 || neighbours > 3
                         continue;
-                    if(life_get_cell(state, cell)){            //the cell (i, j) is alive
-                        //if(neighbours >= 2 && neighbours <= 3){
-                            life_set_cell(new_state, cell, true);
-                        //
+                    if(cell.x == current_cell.x && cell.y == current_cell.y){               //Since cell = current cell, we know it's alive
+                        life_set_cell(new_state, cell, true);
+                        continue;
+                    }
+                    if(life_get_cell(state, cell)){
+                        life_set_cell(new_state, cell, true);
                     }else{
-                        if(neighbours == 3){
+                        if(neighbours == 3){                      //If cell is dead, but has 3 neighbours, it should be alive in next state
                             life_set_cell(new_state, cell, true);
                         }
                     }
@@ -200,15 +196,16 @@ LifeState life_evolve(LifeState state){
             }
         }
     }
-    //life_destroy(state);
+    life_destroy(state);
     return new_state;
 }
 
 void life_destroy(LifeState state){
-    //for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
-    //    Set line = map_node_value(state, map_node);
-    //    set_destroy(line);
-    //}
-    //map_destroy(state);
+    // for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
+    //     Set line = map_node_value(state, map_node);
+    //     for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
+        
+    //     }
+    // }
+    // map_destroy(state);
 }
-
