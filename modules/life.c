@@ -171,13 +171,17 @@ LifeState life_evolve(LifeState state){
                 for(int y = current_cell.y - 1; y <= current_cell.y + 1; y++){
                     LifeCell cell = {x, y};
                     char neighbours = 0;
-                    for(int i = x - 1; i <= x + 1, neighbours < 4; i++){
-                        for(int j = y - 1; j <= y + 1, neighbours < 4; j++){
+                    for(int i = x - 1; i <= x + 1; i++){
+                        for(int j = y - 1; j <= y + 1; j++){
                             if(i != x || j != y){
                                 LifeCell neighbour = {i, j};
                                 neighbours += life_get_cell(state, neighbour);  //If life_get_cell returns 1(true), then neighbour is alive
                             }
+                            if(neighbours == 4)
+                                break;
                         }
+                        if(neighbours == 4)
+                            break;
                     }
                     if(neighbours < 2 || neighbours > 3)             //There can't be any living cell with neighbours < 2 || neighbours > 3
                         continue;
