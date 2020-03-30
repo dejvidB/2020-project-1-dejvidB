@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
-
+#include <string.h>
 int x = 0, y = 0, min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
 
 int compare(int *a, int *b){
@@ -330,13 +330,14 @@ char* RLE_to_String(LifeState state){
         strcpy(result, temp);
     }
     result[i] = '\0';
+    return result;
 }
 
 List life_evolve_many(LifeState state, int steps, ListNode* loop){
     List list_with_states = list_create(NULL);  //List containing all states
     loop = NULL;    //Set loop to NULL
 
-    Map rles = map_create((CompareFunc)strcmp(), free, NULL); //Create map RLE => ListNode
+    Map rles = map_create((CompareFunc)strcmp, free, NULL); //Create map RLE => ListNode
 
     list_insert_next(list_with_states, list_last(list_with_states), state); //Insert the first state in list
     
@@ -361,7 +362,7 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
 
                 if(first_in_evolved.x == first_in_similar.x && first_in_evolved.y == first_in_similar.y){
                     //WE HAVE THE SAME STATE!
-                    loop = list_next(list_with_states,  similar_list_node);
+                    *loop = list_next(list_with_states,  similar_list_node);
                     return list_with_states;
                 }else{
                     continue_checking = 0;
@@ -375,6 +376,6 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
     return list_with_states;
 }
 
-List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop){
+//List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop){
 
-}
+//}

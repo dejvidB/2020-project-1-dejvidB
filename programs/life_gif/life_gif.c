@@ -5,7 +5,7 @@
 #include "life.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <limits.h>
 typedef char* String;
 extern int max_x, max_y, min_x, min_y;
 
