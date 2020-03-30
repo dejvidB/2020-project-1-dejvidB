@@ -9,9 +9,14 @@
 typedef char* String;
 extern int max_x, max_y, min_x, min_y;
 
+#define TOP 0
+#define LEFT 1
+#define BOTTOM 2
+#define RIGHT 3
+
 int main(int argc, char *argv[]) {
     int frames = 1;
-    if(atoi(argv[6]) >= 1)
+    if(atoi(argv[6]) > 1)
         frames = atoi(argv[6]);
 
     // float zoom = 1;
@@ -22,50 +27,59 @@ int main(int argc, char *argv[]) {
     if(atoi(argv[8]) >= 1)
         speed = atoi(argv[8]);
 
-    // int delay = 10;
-    // if(atoi(argv[9]) > 0)
-    //     delay = atoi(argv[9]);
+    int delay = atoi(argv[9]);
 
     String state_file = strdup(argv[1]);
-    //int top = atoi(argv[2]), left = atoi(argv[3]), bottom = atoi(argv[4]), right = atoi(argv[5]);
+
+    int limits[4];
+    limits[TOP] = limits[LEFT] = INT_MIN;
+    limits[BOTTOM] = limits[RIGHT] = INT_MAX;
+
+    limits[TOP] = atoi(argv[2]);
+
+    if(atoi(argv[4]) < limits[TOP])   //If bottom is indeed lower than top
+        limits[BOTTOM] = atoi(argv[4]);
+
+    limits[LEFT] = atoi(argv[3]);
+
+    if(atoi(argv[5]) > limits[LEFT])   //If right is indeed right
+        limits[RIGHT] = atoi(argv[5]);
     
     String target_gif = strdup(argv[10]);
     LifeState state = life_create_from_rle(state_file);
 
 	// Μεγέθη
-	//int size = 300;
+	int size = 300;
 	//int cell_size = 50;
 
 	// Δημιουργία ενός GIF και ενός bitmap στη μνήμη
-	GIF* gif = gif_create(300, 300);
-	Bitmap* bitmap = bm_create(300, 300);
+	GIF* gif = gif_create(size, size);
+	Bitmap* bitmap = bm_create(size, size);
 
-	// Default καθυστέρηση μεταξύ των frames, σε εκατοστά του δευτερολέπτου
-	gif->default_delay = 1;
-    //gif->default_delay = delay;
+	// Default καθυστέρηση μεταξύ των frames, σε milliseconds
+	gif->default_delay = delay;
 
     for(int i = 0; i < frames; i++){
-	//printf("new frame\n");
         bm_set_color(bitmap, bm_atoi("white"));
         bm_clear(bitmap);
         for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
             Set line = map_node_value(state, map_node);
-	    //printf("---------\n");
             for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
                 LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-		//printf("%d, %d\n", cell.x, cell.y);
-                bm_set_color(bitmap, bm_atoi("black"));
-                bm_putpixel(bitmap, cell.y + 130, cell.x + 130);
+                if(cell.x >= limits[TOP] && cell.x <= limits[BOTTOM] && cell.y >= limits[LEFT] && cell.y <= limits[RIGHT]){
+                    bm_set_color(bitmap, bm_atoi("black"));
+                    bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
+                }
             }
         }
         gif_add_frame(gif, bitmap);
+
         //Evlove speed φορές
         for(int j = 0; j < speed; j++){
             state = life_evolve(state);
         }
-     }
+    }
 
-    	life_save_to_rle(state, "result");
 	// Αποθήκευση σε αρχείο
 	gif_save(gif, target_gif);
 

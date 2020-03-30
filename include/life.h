@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include "ADTSet.h"
 #include "ADTMap.h"
+#include "ADTList.h"
 
 typedef struct {
 	int x, y;
@@ -28,3 +29,8 @@ LifeState life_evolve(LifeState state);
 
 // Καταστρέφει την κατάσταση ελευθερώντας οποιαδήποτε μνήμη έχει δεσμευτεί
 void life_destroy(LifeState state);
+
+// Επιστρέφει μία λίστα από το πολύ steps εξελίξεις, ξεκινώνας από την κατάσταση
+// state. Αν βρεθεί επανάληψη τότε στο *loop αποθηκεύεται ο κόμβος στον οποίο
+// συνεχίζει η εξέλιξη μετά τον τελευταίο κόμβο της λίστας, διαφορετικά NULL
+List life_evolve_many(LifeState state, int steps, ListNode* loop);
