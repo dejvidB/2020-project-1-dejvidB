@@ -36,3 +36,5 @@ void life_destroy(LifeState state);
 List life_evolve_many(LifeState state, int steps, ListNode* loop);
 
 char* RLE_to_String(LifeState state);
+
+List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop);

@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <string.h>
 int x = 0, y = 0, min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
+int displacement_x = 0, displacement_y = 0;
 
 int compare(int *a, int *b){
     return *(int*)a - *(int*)b;
@@ -344,7 +345,6 @@ char* RLE_to_String(LifeState state){
 List life_evolve_many(LifeState state, int steps, ListNode* loop){
     List list_with_states = list_create(NULL);  //List containing all states
     loop = NULL;    //Set loop to NULL
-
     Map rles = map_create((CompareFunc)strcmp, free, NULL); //Create map RLE => ListNode
 
     list_insert_next(list_with_states, list_last(list_with_states), state); //Insert the first state in list
@@ -384,6 +384,34 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
     return list_with_states;
 }
 
-//List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop){
+List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop){
+    List list_with_states = list_create(NULL);  //List containing all states
+    loop = NULL;    //Set loop to NULL
+    Map rles = map_create((CompareFunc)strcmp, free, NULL); //Create map RLE => ListNode
+    list_insert_next(list_with_states, list_last(list_with_states), state); //Insert the first state in list
+    LifeState new_state = life_evolve(state); //Evolve to next state
+    for(int i = 1; i < steps; i++){
+            char* rle = strdup(RLE_to_String(new_state));   //Get RLE of this state
+            MapNode similar_node;
+            if((similar_node = map_find_node(rles, rle)) == MAP_EOF){   //Check if there is a ListNode with the same RLE in the map
+                list_insert_next(list_with_states, list_last(list_with_states), new_state); //Insert LifeState in list with states
+                map_insert(rles, rle, list_last(list_with_states)); //Insert ListNode with its RLE as id
+            }else{
+                ListNode similar_list_node = map_node_value(rles, similar_node);    //Map contains list_nodes
+                LifeState similar_life_state = list_node_value(list_with_states, similar_list_node);      //Convert list_node to LifeState
 
-//}
+                Set first_line_in_evolved = map_node_value(new_state, map_first(new_state));
+                LifeCell first_in_evolved = *((LifeCell*)set_node_value(first_line_in_evolved, set_first(first_line_in_evolved)));
+
+                Set first_line_in_similar = map_node_value(similar_life_state, map_first(similar_life_state));
+                LifeCell first_in_similar = *((LifeCell*)set_node_value(first_line_in_similar, set_first(first_line_in_similar)));
+
+                displacement_x = first_in_similar.x - first_in_evolved.y;
+                displacement_y = first_in_similar.y - first_in_evolved.y;
+                *loop = list_next(list_with_states,  similar_list_node);
+                return list_with_states;
+            }
+        new_state = life_evolve(new_state);
+    }
+    return list_with_states;
+}
