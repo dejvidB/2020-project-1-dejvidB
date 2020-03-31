@@ -217,16 +217,18 @@ char* RLE_to_String(LifeState state){
     //Find state limits
     min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
     min_x = *(int*)map_node_key(state, map_first(state));
-    max_x = *(int*)map_node_key(state, map_last(state));
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
         LifeCell leftmost = *(LifeCell*)set_node_value(line, set_first(line));
         LifeCell rightmost = *(LifeCell*)set_node_value(line, set_last(line));
         if(leftmost.y < min_y)
             min_y = leftmost.y;
+        if(leftmost.x > max_x)
+            max_x = leftmost.x;
         if(rightmost.y > max_y)
             max_y = rightmost.y;
     }
+
 
     int size = 50;
     char* result = malloc(size);
@@ -342,7 +344,7 @@ char* RLE_to_String(LifeState state){
 
 List life_evolve_many(LifeState state, int steps, ListNode* loop){
     List list_with_states = list_create(NULL);  //List containing all states
-    loop = NULL;    //Set loop to NULL
+    *loop = NULL;    //Set loop to NULL
     Map rles = map_create((CompareFunc)strcmp, free, NULL); //Create map RLE => ListNode
 
     list_insert_next(list_with_states, list_last(list_with_states), state); //Insert the first state in list
@@ -368,7 +370,8 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
 
                 if(first_in_evolved.x == first_in_similar.x && first_in_evolved.y == first_in_similar.y){
                     //WE HAVE THE SAME STATE!
-                    *loop = list_next(list_with_states,  similar_list_node);
+                    ListNode next = list_next(list_with_states,  similar_list_node);
+                    *loop = next;
                     return list_with_states;
                 }else{
                     continue_checking = 0;
@@ -384,7 +387,7 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
 
 List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop){
     List list_with_states = list_create(NULL);  //List containing all states
-    loop = NULL;    //Set loop to NULL
+    *loop = NULL;
     Map rles = map_create((CompareFunc)strcmp, free, NULL); //Create map RLE => ListNode
     list_insert_next(list_with_states, list_last(list_with_states), state); //Insert the first state in list
     LifeState new_state = life_evolve(state); //Evolve to next state
@@ -404,12 +407,13 @@ List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* lo
                 Set first_line_in_similar = map_node_value(similar_life_state, map_first(similar_life_state));
                 LifeCell first_in_similar = *((LifeCell*)set_node_value(first_line_in_similar, set_first(first_line_in_similar)));
 
-                displacement_x = first_in_similar.x - first_in_evolved.y;
-                displacement_y = first_in_similar.y - first_in_evolved.y;
-                *loop = list_next(list_with_states,  similar_list_node);
+                displacement_x = first_in_evolved.x - first_in_similar.x;
+                displacement_y = first_in_evolved.y - first_in_similar.y;
+                ListNode next = list_next(list_with_states,  similar_list_node);
+                *loop = next;
                 return list_with_states;
             }
-        new_state = life_evolve(new_state);
+       	    new_state = life_evolve(new_state);
     }
     return list_with_states;
 }

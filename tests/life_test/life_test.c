@@ -26,11 +26,12 @@ void test_life_create_from_rle(void){
 
 void test_life_evolve_and_write(void){
     LifeState state = life_create_from_rle("test.RLE");
-    ListNode* rec = NULL;
-    List states = life_evolve_many(state, 500, rec);
-    printf("IS LISTNODE NULL? %d\n", rec == NULL);
+    ListNode loop = NULL;
+    List states = life_evolve_many_with_displacement(state, 500, &loop);
+    //printf("List size is: %d\n", list_size(states));
+    //printf("IS LISTNODE NULL? %p\n", rec);
     state = list_node_value(states, list_last(states));
-    printf("%s\n", RLE_to_String(state));
+    //printf("%s\n", RLE_to_String(state));
     //life_save_to_rle(state, "result.RLE");
     //life_destroy(state);
     TEST_CHECK(state != NULL);
