@@ -34,3 +34,5 @@ void life_destroy(LifeState state);
 // state. Αν βρεθεί επανάληψη τότε στο *loop αποθηκεύεται ο κόμβος στον οποίο
 // συνεχίζει η εξέλιξη μετά τον τελευταίο κόμβο της λίστας, διαφορετικά NULL
 List life_evolve_many(LifeState state, int steps, ListNode* loop);
+
+char* RLE_to_String(LifeState state);

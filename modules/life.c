@@ -166,14 +166,6 @@ LifeState life_evolve(LifeState state){
         Set line = map_node_value(state, map_node);
         for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
             LifeCell current_cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-            if(current_cell.x < min_x)
-                min_x = current_cell.x;
-            if(current_cell.x > max_x)
-                max_x = current_cell.x;
-            if(current_cell.y < min_y)
-                min_y = current_cell.y;
-            if(current_cell.y > max_y)
-                max_y = current_cell.y;
             for(int x = current_cell.x - 1; x <= current_cell.x + 1; x++){
                 for(int y = current_cell.y - 1; y <= current_cell.y + 1; y++){
                     LifeCell cell = {x, y};
@@ -221,9 +213,25 @@ void life_destroy(LifeState state){
 }
 
 char* RLE_to_String(LifeState state){
+    //Find state limits
+    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
+        Set line = map_node_value(state, map_node);
+        for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
+            LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
+            if(cell.x < min_x)
+                min_x = cell.x;
+            if(cell.x > max_x)
+                max_x = cell.x;
+            if(cell.y < min_y)
+                min_y = cell.y;
+            if(cell.y > max_y)
+                max_y = cell.y;
+        }
+    }
+
     int size = 50;
     char* result = malloc(size);
-    int i = 0;  //Count 
+    int i = 0;  //Count
     for(int x = min_x; x <= max_x; x++){
         int times = 0;
         char last = 0, newc = 0;                    //Keep track of old and new charater
@@ -248,7 +256,7 @@ char* RLE_to_String(LifeState state){
                         temp/=10;
                         length++;
                     }
-                    char times_str[length];
+                    char times_str[length + 1];
                     sprintf(times_str, "%d", times);
                     if(length + i > size){
                         char temp[i + 1];
@@ -259,7 +267,7 @@ char* RLE_to_String(LifeState state){
                         strcpy(result, temp);
                     }
                     for(int k = 0; k < length; k++){
-                        result[i] = times_str[k] + '0';
+                        result[i] = times_str[k];
                         i++;
                     }
                 }
@@ -283,7 +291,7 @@ char* RLE_to_String(LifeState state){
                 temp/=10;
                 length++;
             }
-            char times_str[length];
+            char times_str[length + 1];
             sprintf(times_str, "%d", times);
             if(length + i > size){
                 char temp[i + 1];
@@ -294,7 +302,7 @@ char* RLE_to_String(LifeState state){
                 strcpy(result, temp);
             }
             for(int k = 0; k < length; k++){
-                result[i] = times_str[k] + '0';
+                result[i] = times_str[k];
                 i++;
             }
         }
