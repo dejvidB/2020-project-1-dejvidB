@@ -215,19 +215,17 @@ void life_destroy(LifeState state){
 
 char* RLE_to_String(LifeState state){
     //Find state limits
+    min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
+    min_x = *(int*)map_node_key(state, map_first(state));
+    max_x = *(int*)map_node_key(state, map_last(state));
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
-        for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-            LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-            if(cell.x < min_x)
-                min_x = cell.x;
-            if(cell.x > max_x)
-                max_x = cell.x;
-            if(cell.y < min_y)
-                min_y = cell.y;
-            if(cell.y > max_y)
-                max_y = cell.y;
-        }
+        LifeCell leftmost = *(LifeCell*)set_node_value(line, set_first(line));
+        LifeCell rightmost = *(LifeCell*)set_node_value(line, set_last(line));
+        if(leftmost.y < min_y)
+            min_y = leftmost.y;
+        if(rightmost.y > max_y)
+            max_y = rightmost.y;
     }
 
     int size = 50;
