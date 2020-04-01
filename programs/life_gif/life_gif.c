@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <limits.h>
 typedef char* String;
-extern int max_x, max_y, min_x, min_y;
+extern int max_x, max_y, min_x, min_y, displacement_x, displacement_y;
 
 #define TOP 0
 #define LEFT 1
@@ -46,7 +46,6 @@ int main(int argc, char *argv[]) {
         limits[RIGHT] = atoi(argv[5]);
     
     String target_gif = strdup(argv[10]);
-    LifeState state = life_create_from_rle(state_file);
 
 	// Μεγέθη
 	int size = 300;
@@ -59,7 +58,14 @@ int main(int argc, char *argv[]) {
 	// Default καθυστέρηση μεταξύ των frames, σε milliseconds
 	gif->default_delay = delay;
 
+    ListNode loop;
+    List states = life_evolve_many_with_displacement(life_create_from_rle(state_file), frames * speed, &loop);
+    ListNode temp = list_first(states);
+    LifeState state;
+
+    int plus_x = 0, plus_y = 0;
     for(int i = 0; i < frames; i++){
+        state = list_node_value(states, temp);
         bm_set_color(bitmap, bm_atoi("white"));
         bm_clear(bitmap);
         for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
@@ -68,15 +74,25 @@ int main(int argc, char *argv[]) {
                 LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
                 if(cell.x >= limits[TOP] && cell.x <= limits[BOTTOM] && cell.y >= limits[LEFT] && cell.y <= limits[RIGHT]){
                     bm_set_color(bitmap, bm_atoi("black"));
-                    bm_putpixel(bitmap, cell.y + size/2, cell.x + size/2);
+                    bm_putpixel(bitmap, cell.y + plus_y + size/2, cell.x + plus_x + size/2);
                 }
             }
         }
         gif_add_frame(gif, bitmap);
-
         //Evlove speed φορές
         for(int j = 0; j < speed; j++){
             state = life_evolve(state);
+            if(list_next(states, temp) != LIST_EOF){
+                temp = list_next(states, temp);
+            }else{
+                if(loop != NULL){
+                    temp = loop;
+                    plus_x += displacement_x;
+                    plus_y += displacement_y;
+                }else{
+                    break;
+                }
+            }
         }
     }
 

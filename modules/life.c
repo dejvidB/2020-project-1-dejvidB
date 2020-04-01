@@ -68,22 +68,19 @@ LifeState life_create_from_rle(char* file){
 }
 
 void life_save_to_rle(LifeState state, char* file){
-    min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
-
     //Find state limits
+    min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
+    min_x = *(int*)map_node_key(state, map_first(state));
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
         Set line = map_node_value(state, map_node);
-        for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-            LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-            if(cell.x < min_x)
-                min_x = cell.x;
-            if(cell.x > max_x)
-                max_x = cell.x;
-            if(cell.y < min_y)
-                min_y = cell.y;
-            if(cell.y > max_y)
-                max_y = cell.y;
-        }
+        LifeCell leftmost = *(LifeCell*)set_node_value(line, set_first(line));
+        LifeCell rightmost = *(LifeCell*)set_node_value(line, set_last(line));
+        if(leftmost.y < min_y)
+            min_y = leftmost.y;
+        if(leftmost.x > max_x)
+            max_x = leftmost.x;
+        if(rightmost.y > max_y)
+            max_y = rightmost.y;
     }
 
     FILE *fp = fopen(file, "w");
@@ -370,8 +367,8 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
 
                 if(first_in_evolved.x == first_in_similar.x && first_in_evolved.y == first_in_similar.y){
                     //WE HAVE THE SAME STATE!
-                    ListNode next = list_next(list_with_states,  similar_list_node);
-                    *loop = next;
+                    //ListNode next = list_next(list_with_states,  similar_list_node);
+                    *loop = similar_list_node;
                     return list_with_states;
                 }else{
                     continue_checking = 0;
@@ -409,11 +406,11 @@ List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* lo
 
                 displacement_x = first_in_evolved.x - first_in_similar.x;
                 displacement_y = first_in_evolved.y - first_in_similar.y;
-                ListNode next = list_next(list_with_states,  similar_list_node);
-                *loop = next;
+                //ListNode next = list_next(list_with_states,  similar_list_node);
+                *loop = similar_list_node;
                 return list_with_states;
             }
-       	    new_state = life_evolve(new_state);
+            new_state = life_evolve(new_state);
     }
     return list_with_states;
 }
