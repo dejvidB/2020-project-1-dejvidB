@@ -55,7 +55,7 @@ void test_pq_sort_list(void){
 	int last = INT_MIN;
 	for(ListNode node = list_first(list); node != LIST_EOF; node = list_next(list, node)){
 		int *current = list_node_value(list, node);
-		TEST_CHECK(last <= *current);
+		TEST_CHECK(last <= *current);			// Το στοιχείο πρέπει να είναι >= από το προηγούμενο
 		last = *current;
 	}
 	list_destroy(list);

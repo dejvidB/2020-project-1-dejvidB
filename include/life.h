@@ -1,7 +1,12 @@
-#include <stdbool.h>
-#include "ADTSet.h"
 #include "ADTMap.h"
+#include "ADTSet.h"
 #include "ADTList.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <limits.h>
+#include <string.h>
 
 typedef struct {
 	int x, y;
@@ -30,11 +35,16 @@ LifeState life_evolve(LifeState state);
 // Καταστρέφει την κατάσταση ελευθερώντας οποιαδήποτε μνήμη έχει δεσμευτεί
 void life_destroy(LifeState state);
 
+// Μετατρέπει την κατάσταση state σε μορφή RLE και την επιστρέφει ως String
+char* RLE_to_String(LifeState state);
+
 // Επιστρέφει μία λίστα από το πολύ steps εξελίξεις, ξεκινώνας από την κατάσταση
 // state. Αν βρεθεί επανάληψη τότε στο *loop αποθηκεύεται ο κόμβος στον οποίο
 // συνεχίζει η εξέλιξη μετά τον τελευταίο κόμβο της λίστας, διαφορετικά NULL
 List life_evolve_many(LifeState state, int steps, ListNode* loop);
 
-char* RLE_to_String(LifeState state);
-
+// Επιστρέφει μία λίστα από το πολύ steps εξελίξεις, ξεκινώνας από την κατάσταση
+// state. Αν βρεθεί _μετατόπιση ή επανάληψη _ τότε στο *loop αποθηκεύεται ο κόμβος
+// στον οποίο συνεχίζει η εξέλιξη μετά τον τελευταίο κόμβο της λίστας, διαφορετικά NULL
+// και στις μεταβλητές displacement_x, displacement_y αποθηκεύεται η μετατόπιση των x, y
 List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop);

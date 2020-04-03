@@ -5,9 +5,9 @@
 
 #define MAX_LENGTH 200
 
-int* create_int(int value) {
-    int* pointer = malloc(sizeof(int)); // δέσμευση μνήμης
-    *pointer = value;                   // αντιγραφή του value στον νέο ακέραιο
+int* create_int(int value){
+    int* pointer = malloc(sizeof(int));
+    *pointer = value;
     return pointer;
 }
 
@@ -22,11 +22,11 @@ int main(void){
 	char *temp = malloc(sizeof(char) * (MAX_LENGTH + 1));
 	if (temp == NULL)
 		return 1; //Could not allocate memory
-	while (fgets(temp, MAX_LENGTH, stdin) != NULL){
+	while (fgets(temp, MAX_LENGTH, stdin) != NULL){	//Read line and put it in `temp` variable
 		int counter = 0;
-		MapNode key = MAP_EOF;
+		MapNode key;
 		if ((key = map_find_node(map, temp)) == MAP_EOF){
-			map_insert(map, create_str(temp), create_int(1));
+			map_insert(map, create_str(temp), create_int(1));	//Insert string as a key in map
 		}else{
 			int *node_value = (int *)map_node_value(map, key);
 			counter = *node_value;

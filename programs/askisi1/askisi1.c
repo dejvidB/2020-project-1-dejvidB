@@ -6,7 +6,7 @@
 #define MAX_LENGTH 20
 
 int main(void){
-	int size = 0;
+	int size = 0;	//Counter of strings
 	char **buf = malloc(sizeof(char*) * CAPACITY);
 	if(buf == NULL)
 		return 1; //Could not allocate memory

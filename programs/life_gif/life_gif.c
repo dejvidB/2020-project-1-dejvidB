@@ -1,13 +1,11 @@
 #include "bmp.h"
 #include "gif.h"
-#include "ADTVector.h"
-#include <string.h>
 #include "life.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
+
+#include <math.h>
+
 typedef char* String;
-extern int max_x, max_y, min_x, min_y, displacement_x, displacement_y;
+extern int displacement_x, displacement_y;
 
 #define TOP 0
 #define LEFT 1
@@ -19,44 +17,47 @@ int main(int argc, char *argv[]) {
     if(atoi(argv[6]) > 1)
         frames = atoi(argv[6]);
 
-    // float zoom = 1;
-    // if(atof(argv[7]) > 0)
-    //     zoom = atof(argv[7]);
+    float zoom = 1;
+    //if(atof(argv[7]) > 0)
+        //zoom = atof(argv[7]);
 
     int speed = 1;
-    if(atoi(argv[8]) >= 1)
+    if(atoi(argv[8]) > 1)
         speed = atoi(argv[8]);
 
     int delay = atoi(argv[9]);
 
-    String state_file = strdup(argv[1]);
+    String state_file = argv[1];
 
     int limits[4];
-    limits[TOP] = limits[LEFT] = INT_MIN;
-    limits[BOTTOM] = limits[RIGHT] = INT_MAX;
+    limits[TOP] = limits[LEFT] = -150;
+    limits[BOTTOM] = limits[RIGHT] = 150;
 
     limits[TOP] = atoi(argv[2]);
 
-    if(atoi(argv[4]) < limits[TOP])   //If bottom is indeed lower than top
+    if(atoi(argv[4]) > limits[TOP])   //If bottom is indeed lower than top
         limits[BOTTOM] = atoi(argv[4]);
+    else
+        limits[BOTTOM] = limits[TOP] + 300;
 
     limits[LEFT] = atoi(argv[3]);
 
     if(atoi(argv[5]) > limits[LEFT])   //If right is indeed right
         limits[RIGHT] = atoi(argv[5]);
-    
-    String target_gif = strdup(argv[10]);
+    else
+        limits[RIGHT] = limits[LEFT] + 300;
 
-	// Μεγέθη
-	int size = 300;
-	//int cell_size = 50;
+    String target_gif = argv[10];
 
-	// Δημιουργία ενός GIF και ενός bitmap στη μνήμη
-	GIF* gif = gif_create(size, size);
-	Bitmap* bitmap = bm_create(size, size);
+    int x = (limits[BOTTOM] - limits[TOP]) * zoom;
+    int y = (limits[RIGHT] - limits[LEFT]) * zoom;
 
-	// Default καθυστέρηση μεταξύ των frames, σε milliseconds
-	gif->default_delay = delay;
+    // Δημιουργία ενός GIF και ενός bitmap στη μνήμη
+    GIF* gif = gif_create(x, y);
+    Bitmap* bitmap = bm_create(x, y);
+
+    // Default καθυστέρηση μεταξύ των frames, σε milliseconds
+    gif->default_delay = delay;
 
     ListNode loop;
     List states = life_evolve_many_with_displacement(life_create_from_rle(state_file), frames * speed, &loop);
@@ -68,20 +69,23 @@ int main(int argc, char *argv[]) {
         state = list_node_value(states, temp);
         bm_set_color(bitmap, bm_atoi("white"));
         bm_clear(bitmap);
+        bm_set_color(bitmap, bm_atoi("black"));
         for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
             Set line = map_node_value(state, map_node);
             for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
                 LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
-                if(cell.x >= limits[TOP] && cell.x <= limits[BOTTOM] && cell.y >= limits[LEFT] && cell.y <= limits[RIGHT]){
-                    bm_set_color(bitmap, bm_atoi("black"));
-                    bm_putpixel(bitmap, cell.y + plus_y + size/2, cell.x + plus_x + size/2);
+                x = cell.x + plus_x - limits[TOP];
+                y = cell.y + plus_y - limits[LEFT];
+
+                if(x >= limits[TOP] && x <= limits[BOTTOM] && y >= limits[LEFT] && y <= limits[RIGHT]){
+                    //bm_fillrect(bitmap, (cell.x + plus_x) * zoom, (cell.y + plus_y) * zoom, (cell.x + plus_x) * zoom, (cell.y + plus_y) * zoom);
+                    bm_putpixel(bitmap, y, x);
                 }
             }
         }
         gif_add_frame(gif, bitmap);
         //Evlove speed φορές
         for(int j = 0; j < speed; j++){
-            state = life_evolve(state);
             if(list_next(states, temp) != LIST_EOF){
                 temp = list_next(states, temp);
             }else{
@@ -96,10 +100,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
-	// Αποθήκευση σε αρχείο
-	gif_save(gif, target_gif);
+    list_destroy(states);
 
-	// Αποδέσμευση μνήμης
-	bm_free(bitmap);
-	gif_free(gif);
+    // Αποθήκευση σε αρχείο
+    gif_save(gif, target_gif);
+
+    // Αποδέσμευση μνήμης
+    bm_free(bitmap);
+    gif_free(gif);
 }
