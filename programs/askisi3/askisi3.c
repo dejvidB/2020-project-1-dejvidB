@@ -13,8 +13,8 @@ int main(void){
 
 	while (fgets(temp, MAX_LENGTH, stdin) != NULL){
 		SetNode node = set_first(set);
-		while (node != SET_EOF && strcmp((char *)set_node_value(set, node), temp) < 0){
-			node = set_next(set, node);
+		while (node != SET_EOF && strcmp((char *)set_node_value(set, node), temp) < 0){ //While each line in map is "smaller" than new line
+			node = set_next(set, node);	//Go to the next line
 		}
 		if (node == SET_EOF){
 			printf("<none>\n");

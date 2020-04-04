@@ -4,7 +4,7 @@
 //
 //////////////////////////////////////////////////////////////////
 #include <limits.h>
-#include "acutest.h"			// Απλή βιβλιοθήκη για unit testing
+#include "acutest.h"                    // Απλή βιβλιοθήκη για unit testing
 
 #include "life.h"
 
@@ -24,18 +24,19 @@ void test_life_evolve(void){
     LifeState state = life_create_from_rle("live_evolve_test_file.RLE");
     TEST_CHECK(state != NULL);
 
-    state = life_evolve(state);
-
-    //Check if life evolved to the next state successfully
-    char* evolved_rle = RLE_to_String(state);
-    TEST_CHECK(strcmp(evolved_rle, "obo$b2o$bob!") == 0);
+    LifeState state1 = life_evolve(state);
+    //Check if life evolved successfully to the next state
+    char* evolved_rle = RLE_to_String(state1);
+    TEST_CHECK(strcmp(evolved_rle, "obo$b2o$bob") == 0);
     free(evolved_rle);
     life_destroy(state);
+    life_destroy(state1);
 
+    //Remove test file
     remove("live_evolve_test_file.RLE");
 }
 
-void test_life_get_cell(void){
+void test_life_get_set_cell(void){
     LifeCell cell = {INT_MIN, 0};
     LifeCell cell1 = {0, INT_MAX};
     LifeCell cell2 = {5, 6};
@@ -56,6 +57,17 @@ void test_life_get_cell(void){
     TEST_CHECK(life_get_cell(test_state, cell3));
     TEST_CHECK(life_get_cell(test_state, dead) == 0);
 
+    life_set_cell(test_state, cell, false);
+    life_set_cell(test_state, cell1, false);
+    life_set_cell(test_state, cell2, false);
+    life_set_cell(test_state, cell3, false);
+
+
+    TEST_CHECK(!life_get_cell(test_state, cell));
+    TEST_CHECK(!life_get_cell(test_state, cell1));
+    TEST_CHECK(!life_get_cell(test_state, cell2));
+    TEST_CHECK(!life_get_cell(test_state, cell3));
+
     life_destroy(test_state);
 }
 
@@ -75,9 +87,9 @@ void test_life_evolve_and_write(void){
 
 // Λίστα με όλα τα tests προς εκτέλεση
 TEST_LIST = {
-	{ "test_life_create", test_life_create},
-    { "test_life_evolve", test_life_evolve},
-	{ "test_life_get_cell", test_life_get_cell},
-	{ "test_life_evovle_and_write", test_life_evolve_and_write},
-	{ NULL, NULL } // τερματίζουμε τη λίστα με NULL
+    {"life_create() and life_destroy()", test_life_create},
+    {"life_evolve()", test_life_evolve},
+    {"life_set_cell() and life_get_cell()", test_life_get_set_cell},
+    //{ "test_life_evovle_and_write", test_life_evolve_and_write},
+    { NULL, NULL } // τερματίζουμε τη λίστα με NULL
 };

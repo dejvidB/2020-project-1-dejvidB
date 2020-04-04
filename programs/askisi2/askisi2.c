@@ -11,12 +11,6 @@ int* create_int(int value){
     return pointer;
 }
 
-char* create_str(char* value){
-	char* pointer = malloc((sizeof(strlen(value) + 1) * sizeof(char)));
-	strcpy(pointer, value);
-	return pointer;
-}
-
 int main(void){
 	Map map = map_create((CompareFunc)strcmp, free, free);
 	char *temp = malloc(sizeof(char) * (MAX_LENGTH + 1));
@@ -26,7 +20,7 @@ int main(void){
 		int counter = 0;
 		MapNode key;
 		if ((key = map_find_node(map, temp)) == MAP_EOF){
-			map_insert(map, create_str(temp), create_int(1));	//Insert string as a key in map
+			map_insert(map, strdup(temp), create_int(1));	//Insert line as a key in map, and value = 1, because it's new
 		}else{
 			int *node_value = (int *)map_node_value(map, key);
 			counter = *node_value;

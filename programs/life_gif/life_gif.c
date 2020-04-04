@@ -17,10 +17,6 @@ int main(int argc, char *argv[]) {
     if(atoi(argv[6]) > 1)
         frames = atoi(argv[6]);
 
-    float zoom = 1;
-    //if(atof(argv[7]) > 0)
-        //zoom = atof(argv[7]);
-
     int speed = 1;
     if(atoi(argv[8]) > 1)
         speed = atoi(argv[8]);
@@ -49,8 +45,8 @@ int main(int argc, char *argv[]) {
 
     String target_gif = argv[10];
 
-    int x = (limits[BOTTOM] - limits[TOP]) * zoom;
-    int y = (limits[RIGHT] - limits[LEFT]) * zoom;
+    int x = limits[BOTTOM] - limits[TOP];
+    int y = limits[RIGHT] - limits[LEFT];
 
     // Δημιουργία ενός GIF και ενός bitmap στη μνήμη
     GIF* gif = gif_create(x, y);
@@ -60,7 +56,7 @@ int main(int argc, char *argv[]) {
     gif->default_delay = delay;
 
     ListNode loop;
-    List states = life_evolve_many_with_displacement(life_create_from_rle(state_file), frames * speed, &loop);
+    List states = life_evolve_many(life_create_from_rle(state_file), frames * speed, &loop);
     ListNode temp = list_first(states);
     LifeState state;
 
@@ -78,7 +74,6 @@ int main(int argc, char *argv[]) {
                 y = cell.y + plus_y - limits[LEFT];
 
                 if(cell.x + plus_x >= limits[TOP] && cell.x + plus_x <= limits[BOTTOM] && cell.y + plus_y >= limits[LEFT] && cell.y + plus_y <= limits[RIGHT]){
-                    //bm_fillrect(bitmap, (cell.x + plus_x) * zoom, (cell.y + plus_y) * zoom, (cell.x + plus_x) * zoom, (cell.y + plus_y) * zoom);
                     bm_putpixel(bitmap, y, x);
                 }
             }
@@ -90,7 +85,7 @@ int main(int argc, char *argv[]) {
                 temp = list_next(states, temp);
             }else{
                 if(loop != NULL){
-                    temp = loop;
+            temp = loop;
                     plus_x += displacement_x;
                     plus_y += displacement_y;
                 }else{

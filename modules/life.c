@@ -12,7 +12,7 @@ int set_compare(LifeCell *a, LifeCell *b){
     return a->y - b->y;
 }
 
-int *create_int(int value){
+int* create_int(int value){
     int *p = malloc(sizeof(int));
     assert(p != NULL);
     *p = value;
@@ -127,6 +127,8 @@ bool life_get_cell(LifeState state, LifeCell cell){
 void life_set_cell(LifeState state, LifeCell cell, bool value){
     Set line = map_find(state, &cell.x);
     if(value){
+        if(life_get_cell(state, cell))
+            return;
         if(line == NULL){                                       //If x line does not exist
             LifeCell* new_cell = malloc(sizeof(LifeCell));      //Allocate memory for new LifeCell and copy cell coordinates
             new_cell->x = cell.x;
@@ -142,12 +144,14 @@ void life_set_cell(LifeState state, LifeCell cell, bool value){
         }
     }else{
         if(line != NULL){
-            free(set_find(line, &cell));
-            //set_remove(line, &cell);
+            set_set_destroy_value(line, free);
+            set_remove(line, &cell);
+            set_set_destroy_value(line, NULL);
             if(set_size(line) == 0){
                 set_destroy(line);
-                int* key  = map_node_key(state, map_find_node(state, &(cell.y)));
-                free(key);
+                map_set_destroy_key(state, free);
+                map_remove(state, &cell.x);
+                map_set_destroy_key(state, NULL);
             }
         }
     }
@@ -197,13 +201,13 @@ LifeState life_evolve(LifeState state){
 }
 
 void life_destroy(LifeState state){
-    // for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
-    //     Set line = map_node_value(state, map_node);
-    //     for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
-        
-    //     }
-    // }
-    // map_destroy(state);
+    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
+        Set line = map_node_value(state, map_node);
+        set_set_destroy_value(line, free);
+        set_destroy(line);
+    }
+    map_set_destroy_key(state, free);
+    map_destroy(state);
 }
 
 char* RLE_to_String(LifeState state){
@@ -342,9 +346,10 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
 
     LifeState new_state = life_evolve(state); //Evolve to the next state
     char continue_checking = 1;
+    char* rle = NULL;
     for(int i = 1; i < steps; i++){
         if(continue_checking){
-            char* rle = RLE_to_String(new_state);   //Get RLE of the new state
+            rle = RLE_to_String(new_state);   //Get RLE of the new state
             MapNode similar_node;
             if((similar_node = map_find_node(rles, rle)) == MAP_EOF){   //Check if there is a ListNode with the same RLE in the map
                 list_insert_next(list_with_states, list_last(list_with_states), new_state); //Insert LifeState in list with states
@@ -362,8 +367,10 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
                 if(first_cell_in_evolved.x == first_cell_in_similar.x && first_cell_in_evolved.y == first_cell_in_similar.y){
                     //WE HAVE THE SAME STATE!
                     free(rle);
-                    map_destroy(rles);
                     *loop = similar_list_node;
+                    free(rle);
+                    life_destroy(new_state);
+                    map_destroy(rles);
                     return list_with_states;
                 }else{
                     //Look alike state was found, but it has different coordinates
@@ -377,21 +384,25 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
         }
         new_state = life_evolve(new_state);
     }
+    free(new_state);
     map_destroy(rles);
+    if(rle != NULL)
+        free(rle);
     return list_with_states;
 }
 
 List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* loop){
     List list_with_states = list_create((DestroyFunc)life_destroy);  //List containing all states
-    loop = NULL;    //Set loop to NULL
+    *loop = NULL;    //Set loop to NULL
     Map rles = map_create((CompareFunc)strcmp, free, NULL); //Create map RLE => ListNode
 
     list_insert_next(list_with_states, list_last(list_with_states), state); //Insert the first state in list
     map_insert(rles, RLE_to_String(state), list_last(list_with_states));    //Insert the first state with its RLE in map
 
     LifeState new_state = life_evolve(state); //Evolve to the next state
+    char* rle = NULL;
     for(int i = 1; i < steps; i++){
-            char* rle = RLE_to_String(new_state);   //Get RLE of this state
+            rle = RLE_to_String(new_state);   //Get RLE of this state
             MapNode similar_node;
             if((similar_node = map_find_node(rles, rle)) == MAP_EOF){   //Check if there is a ListNode with the same RLE in the map
                 list_insert_next(list_with_states, list_last(list_with_states), new_state); //Insert LifeState in list with states
@@ -410,12 +421,16 @@ List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* lo
                 displacement_y = first_cell_in_evolved.y - first_cell_in_similar.y;
                 *loop = similar_list_node;
                 free(rle);
+                life_destroy(new_state);
                 map_destroy(rles);
                 return list_with_states;
             }
-        map_destroy(rles);
         free(rle);
         new_state = life_evolve(new_state);
     }
+    free(new_state);
+    map_destroy(rles);
+    if(rle != NULL)
+        free(rle);
     return list_with_states;
 }
