@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
                 x = cell.x + plus_x - limits[TOP];
                 y = cell.y + plus_y - limits[LEFT];
 
-                if(x >= limits[TOP] && x <= limits[BOTTOM] && y >= limits[LEFT] && y <= limits[RIGHT]){
+                if(cell.x + plus_x >= limits[TOP] && cell.x + plus_x <= limits[BOTTOM] && cell.y + plus_y >= limits[LEFT] && cell.y + plus_y <= limits[RIGHT]){
                     //bm_fillrect(bitmap, (cell.x + plus_x) * zoom, (cell.y + plus_y) * zoom, (cell.x + plus_x) * zoom, (cell.y + plus_y) * zoom);
                     bm_putpixel(bitmap, y, x);
                 }
