@@ -2,8 +2,6 @@
 #include "gif.h"
 #include "life.h"
 
-#include <math.h>
-
 typedef char* String;
 extern int displacement_x, displacement_y;
 
@@ -13,6 +11,11 @@ extern int displacement_x, displacement_y;
 #define RIGHT 3
 
 int main(int argc, char *argv[]) {
+    if(argc < 11){
+        printf("Wrong usage.\n life_gif <state> <top> <left> <bottom> <right> <frames> <zoom> <speed> <delay> <gif>\n");
+        return 1;
+    }
+
     int frames = 1;
     if(atoi(argv[6]) > 1)
         frames = atoi(argv[6]);
@@ -26,8 +29,6 @@ int main(int argc, char *argv[]) {
     String state_file = argv[1];
 
     int limits[4];
-    limits[TOP] = limits[LEFT] = -150;
-    limits[BOTTOM] = limits[RIGHT] = 150;
 
     limits[TOP] = atoi(argv[2]);
 
@@ -49,14 +50,14 @@ int main(int argc, char *argv[]) {
     int y = limits[RIGHT] - limits[LEFT];
 
     // Δημιουργία ενός GIF και ενός bitmap στη μνήμη
-    GIF* gif = gif_create(x, y);
-    Bitmap* bitmap = bm_create(x, y);
+    GIF* gif = gif_create(y, x);
+    Bitmap* bitmap = bm_create(y, x);
 
     // Default καθυστέρηση μεταξύ των frames, σε milliseconds
     gif->default_delay = delay;
 
     ListNode loop;
-    List states = life_evolve_many(life_create_from_rle(state_file), frames * speed, &loop);
+    List states = life_evolve_many_with_displacement(life_create_from_rle(state_file), frames * speed, &loop);
     ListNode temp = list_first(states);
     LifeState state;
 
@@ -71,7 +72,7 @@ int main(int argc, char *argv[]) {
             for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
                 LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
                 x = cell.x + plus_x - limits[TOP];
-                y = cell.y + plus_y - limits[LEFT];
+                y = cell.y + plus_y - limits[LEFT]; 
 
                 if(cell.x + plus_x >= limits[TOP] && cell.x + plus_x <= limits[BOTTOM] && cell.y + plus_y >= limits[LEFT] && cell.y + plus_y <= limits[RIGHT]){
                     bm_putpixel(bitmap, y, x);
@@ -79,13 +80,13 @@ int main(int argc, char *argv[]) {
             }
         }
         gif_add_frame(gif, bitmap);
-        //Evlove speed φορές
+        //Evlove speed φορές, μεταξύ δύο frames
         for(int j = 0; j < speed; j++){
             if(list_next(states, temp) != LIST_EOF){
                 temp = list_next(states, temp);
             }else{
                 if(loop != NULL){
-            temp = loop;
+                    temp = loop;
                     plus_x += displacement_x;
                     plus_y += displacement_y;
                 }else{
@@ -103,4 +104,5 @@ int main(int argc, char *argv[]) {
     // Αποδέσμευση μνήμης
     bm_free(bitmap);
     gif_free(gif);
+    return 0;
 }
