@@ -366,7 +366,6 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
 
                 if(first_cell_in_evolved.x == first_cell_in_similar.x && first_cell_in_evolved.y == first_cell_in_similar.y){
                     //WE HAVE THE SAME STATE!
-                    free(rle);
                     *loop = similar_list_node;
                     free(rle);
                     life_destroy(new_state);
@@ -382,12 +381,10 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
         }else{
             list_insert_next(list_with_states, list_last(list_with_states), new_state);
         }
-        new_state = life_evolve(new_state);
+        if(i != steps - 1)
+            new_state = life_evolve(new_state);
     }
-    free(new_state);
     map_destroy(rles);
-    if(rle != NULL)
-        free(rle);
     return list_with_states;
 }
 
@@ -426,11 +423,9 @@ List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* lo
                 return list_with_states;
             }
         free(rle);
-        new_state = life_evolve(new_state);
+        if(i != steps - 1)
+            new_state = life_evolve(new_state);
     }
-    free(new_state);
     map_destroy(rles);
-    if(rle != NULL)
-        free(rle);
     return list_with_states;
 }
