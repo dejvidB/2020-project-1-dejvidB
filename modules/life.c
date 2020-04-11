@@ -355,6 +355,12 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
                 list_insert_next(list_with_states, list_last(list_with_states), new_state); //Insert LifeState in list with states
                 map_insert(rles, strdup(rle), list_last(list_with_states)); //Insert ListNode with its RLE as id
             }else{
+                if(map_size(new_state) == 0){  //If new state is blank
+                    free(rle);
+                    life_destroy(new_state);
+                    map_destroy(rles);
+                    return list_with_states;
+                }
                 ListNode similar_list_node = map_node_value(rles, similar_node);    //Map contains list_nodes
                 LifeState similar_life_state = list_node_value(list_with_states, similar_list_node);      //Convert list_node to LifeState
 
@@ -405,6 +411,12 @@ List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* lo
                 list_insert_next(list_with_states, list_last(list_with_states), new_state); //Insert LifeState in list with states
                 map_insert(rles, strdup(rle), list_last(list_with_states)); //Insert ListNode with its RLE as id
             }else{
+                if(map_size(new_state) == 0){  //If new state is blank
+                    free(rle);
+                    life_destroy(new_state);
+                    map_destroy(rles);
+                    return list_with_states;
+                }
                 ListNode similar_list_node = map_node_value(rles, similar_node);    //Map contains list_nodes
                 LifeState similar_life_state = list_node_value(list_with_states, similar_list_node);      //Convert list_node to LifeState
 

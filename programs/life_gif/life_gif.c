@@ -12,7 +12,7 @@ extern int displacement_x, displacement_y;
 
 int main(int argc, char *argv[]) {
     if(argc < 11){
-        printf("Wrong usage.\n life_gif <state> <top> <left> <bottom> <right> <frames> <zoom> <speed> <delay> <gif>\n");
+        printf("Wrong usage.\nlife_gif <state> <top> <left> <bottom> <right> <frames> <zoom> <speed> <delay> <gif>\n");
         return 1;
     }
 
@@ -35,19 +35,19 @@ int main(int argc, char *argv[]) {
     if(atoi(argv[4]) > limits[TOP])   //If bottom is indeed lower than top
         limits[BOTTOM] = atoi(argv[4]);
     else
-        limits[BOTTOM] = limits[TOP] + 300;
+        limits[BOTTOM] = limits[TOP] + 300;  //Make height at least 300px by default
 
     limits[LEFT] = atoi(argv[3]);
 
     if(atoi(argv[5]) > limits[LEFT])   //If right is indeed right
         limits[RIGHT] = atoi(argv[5]);
     else
-        limits[RIGHT] = limits[LEFT] + 300;
+        limits[RIGHT] = limits[LEFT] + 300;  //Make width at least 300px by default
 
     String target_gif = argv[10];
 
-    int x = limits[BOTTOM] - limits[TOP];
-    int y = limits[RIGHT] - limits[LEFT];
+    int x = limits[BOTTOM] - limits[TOP];  //Calculate height
+    int y = limits[RIGHT] - limits[LEFT];  //Calculate width
 
     // Δημιουργία ενός GIF και ενός bitmap στη μνήμη
     GIF* gif = gif_create(y, x);
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     // Default καθυστέρηση μεταξύ των frames, σε milliseconds
     gif->default_delay = delay;
 
-    ListNode loop;
+    ListNode loop = NULL;
     List states = life_evolve_many_with_displacement(life_create_from_rle(state_file), frames * speed, &loop);
     ListNode temp = list_first(states);
     LifeState state;
@@ -71,8 +71,9 @@ int main(int argc, char *argv[]) {
             Set line = map_node_value(state, map_node);
             for(SetNode node = set_first(line); node != SET_EOF; node = set_next(line, node)){
                 LifeCell cell = {((LifeCell*)set_node_value(line, node))->x, ((LifeCell*)set_node_value(line, node))->y};
+                //Calculate graphical position of cell, considering displacement (plus_x/plus_y)
                 x = cell.x + plus_x - limits[TOP];
-                y = cell.y + plus_y - limits[LEFT]; 
+                y = cell.y + plus_y - limits[LEFT];
 
                 if(cell.x + plus_x >= limits[TOP] && cell.x + plus_x <= limits[BOTTOM] && cell.y + plus_y >= limits[LEFT] && cell.y + plus_y <= limits[RIGHT]){
                     bm_putpixel(bitmap, y, x);
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
             }
         }
         gif_add_frame(gif, bitmap);
-        //Evlove speed φορές, μεταξύ δύο frames
+        //Evlove speed times, between two frames
         for(int j = 0; j < speed; j++){
             if(list_next(states, temp) != LIST_EOF){
                 temp = list_next(states, temp);
