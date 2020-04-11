@@ -212,6 +212,12 @@ void life_destroy(LifeState state){
 
 char* RLE_to_String(LifeState state){
     //Find state limits
+    if(map_size(state) == 0){
+        char* empty = malloc(2);
+        empty[0] = '!';
+        empty[1] = '/0';
+        return empty;
+    }
     min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
     min_x = *(int*)map_node_key(state, map_first(state));   //The minimum x, is the first value of the map, based on CompareFunc
     for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
