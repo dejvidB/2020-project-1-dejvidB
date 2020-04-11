@@ -215,7 +215,7 @@ char* RLE_to_String(LifeState state){
     if(map_size(state) == 0){
         char* empty = malloc(2);
         empty[0] = '!';
-        empty[1] = '/0';
+        empty[1] = 0; //End of string
         return empty;
     }
     min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
