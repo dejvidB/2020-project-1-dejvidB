@@ -19,6 +19,139 @@ int* create_int(int value){
     return p;
 }
 
+char* RLE_to_String(LifeState state){
+    //Check if state is "NULL"
+    if(map_size(state) == 0){
+        char* empty = malloc(2);
+        empty[0] = '!';
+        empty[1] = 0; //End of string
+        return empty;
+    }
+    //Find state limits
+    min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
+    min_x = *(int*)map_node_key(state, map_first(state));   //The minimum x, is the first value of the map, based on CompareFunc
+    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
+        Set line = map_node_value(state, map_node);
+        LifeCell leftmost = *(LifeCell*)set_node_value(line, set_first(line));
+        LifeCell rightmost = *(LifeCell*)set_node_value(line, set_last(line));
+        if(leftmost.y < min_y)
+            min_y = leftmost.y;
+        if(leftmost.x > max_x)
+            max_x = leftmost.x;
+        if(rightmost.y > max_y)
+            max_y = rightmost.y;
+    }
+
+    int size = 50;
+    char* result = malloc(size);
+    int i = 0;    //Count the characters inside the string the function returns (result)
+    for(int x = min_x; x <= max_x; x++){
+        int times = 0;
+        char last = 0, newc = 0;                    //Keep track of old and new charater
+        for(int y = min_y; y <= max_y; y++){
+            LifeCell cell = {x, y};
+            if(life_get_cell(state, cell)){
+                newc  = 'o';
+            }else{
+                newc = 'b';
+            }
+            if(last == 0){
+                last = newc;
+                times = 1;
+            }else if(last == newc){                 //Count consecutive alive or dead cells
+                times++;
+            }else{
+                if(times > 1){
+                    int temp = times, length = 0;
+                    while(temp){
+                        temp/=10;
+                        length++;
+                    }
+                    char times_str[length + 1];
+                    sprintf(times_str, "%d", times);
+                    if(length + i > size){
+                        char temp[i + 1];
+                        strcpy(temp, result);
+                        free(result);
+                        size *= 2;
+                        result = malloc(size);
+                        strcpy(result, temp);
+                    }
+                    for(int k = 0; k < length; k++){
+                        result[i] = times_str[k];
+                        i++;
+                    }
+                }
+                if(i + 1 > size){
+                    char temp[i + 1];
+                    strcpy(temp, result);
+                    free(result);
+                    size *= 2;
+                    result = malloc(size);
+                    strcpy(result, temp);
+                }
+                result[i] = last;
+                i++;
+                last = newc;
+                times = 1;
+            }
+        }
+        if(times > 1){
+            int temp = times, length = 0;
+            while(temp){
+                temp/=10;
+                length++;
+            }
+            char times_str[length + 1];
+            sprintf(times_str, "%d", times);
+            if(length + i > size){
+                char temp[i + 1];
+                strcpy(temp, result);
+                free(result);
+                size *= 2;
+                result = malloc(size);
+                strcpy(result, temp);
+            }
+            for(int k = 0; k < length; k++){
+                result[i] = times_str[k];
+                i++;
+            }
+        }
+        if(i + 1 > size){
+            char temp[i + 1];
+            strcpy(temp, result);
+            free(result);
+            size *= 2;
+            result = malloc(size);
+            strcpy(result, temp);
+        }
+        result[i] = last;
+        i++;
+        if(x != max_x){
+            if(i + 1 > size){
+                char temp[i + 1];
+                strcpy(temp, result);
+                free(result);
+                size *= 2;
+                result = malloc(size);
+                strcpy(result, temp);
+            }
+            result[i] = '$';
+            i++;
+        }
+    }
+    if(i + 1 > size){
+        char temp[i + 1];
+        strcpy(temp, result);
+        free(result);
+        size += 1;
+        result = malloc(size);
+        strcpy(result, temp);
+    }
+    result[i] = '\0';
+    return result;
+}
+
 LifeState life_create(){
     return map_create((CompareFunc)compare, NULL, NULL);
 }
@@ -67,18 +200,23 @@ LifeState life_create_from_rle(char* file){
 
 void life_save_to_rle(LifeState state, char* file){
     //Find state limits
-    min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
-    min_x = *(int*)map_node_key(state, map_first(state));
-    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
-        Set line = map_node_value(state, map_node);
-        LifeCell leftmost = *(LifeCell*)set_node_value(line, set_first(line));
-        LifeCell rightmost = *(LifeCell*)set_node_value(line, set_last(line));
-        if(leftmost.y < min_y)
-            min_y = leftmost.y;
-        if(leftmost.x > max_x)
-            max_x = leftmost.x;
-        if(rightmost.y > max_y)
-            max_y = rightmost.y;
+    if(map_size(state) == 0){  //Check if state is "NULL"
+        min_x = 1; max_x = 0;  //Break for loop below, without iteration
+        min_y = max_y = 0;
+    }else{
+        min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
+        min_x = *(int*)map_node_key(state, map_first(state));
+        for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
+            Set line = map_node_value(state, map_node);
+            LifeCell leftmost = *(LifeCell*)set_node_value(line, set_first(line));
+            LifeCell rightmost = *(LifeCell*)set_node_value(line, set_last(line));
+            if(leftmost.y < min_y)
+                min_y = leftmost.y;
+            if(leftmost.x > max_x)
+                max_x = leftmost.x;
+            if(rightmost.y > max_y)
+                max_y = rightmost.y;
+        }
     }
 
     FILE *fp = fopen(file, "w");
@@ -210,138 +348,6 @@ void life_destroy(LifeState state){
     map_destroy(state);
 }
 
-char* RLE_to_String(LifeState state){
-    //Find state limits
-    if(map_size(state) == 0){
-        char* empty = malloc(2);
-        empty[0] = '!';
-        empty[1] = 0; //End of string
-        return empty;
-    }
-    min_x = min_y = INT_MAX, max_x = max_y = INT_MIN;
-    min_x = *(int*)map_node_key(state, map_first(state));   //The minimum x, is the first value of the map, based on CompareFunc
-    for(MapNode map_node = map_first(state); map_node != MAP_EOF; map_node = map_next(state, map_node)){
-        Set line = map_node_value(state, map_node);
-        LifeCell leftmost = *(LifeCell*)set_node_value(line, set_first(line));
-        LifeCell rightmost = *(LifeCell*)set_node_value(line, set_last(line));
-        if(leftmost.y < min_y)
-            min_y = leftmost.y;
-        if(leftmost.x > max_x)
-            max_x = leftmost.x;
-        if(rightmost.y > max_y)
-            max_y = rightmost.y;
-    }
-
-    int size = 50;
-    char* result = malloc(size);
-    int i = 0;    //Count the characters inside the string the function returns (result)
-    for(int x = min_x; x <= max_x; x++){
-        int times = 0;
-        char last = 0, newc = 0;                    //Keep track of old and new charater
-        for(int y = min_y; y <= max_y; y++){
-            LifeCell cell = {x, y};
-            if(life_get_cell(state, cell)){
-                newc  = 'o';
-            }else{
-                newc = 'b';
-            }
-            if(last == 0){
-                last = newc;
-                times = 1;
-            }else if(last == newc){                 //Count consecutive alive or dead cells
-                times++;
-            }else{
-                if(times > 1){
-                    int temp = times, length = 0;
-                    while(temp){
-                        temp/=10;
-                        length++;
-                    }
-                    char times_str[length + 1];
-                    sprintf(times_str, "%d", times);
-                    if(length + i > size){
-                        char temp[i + 1];
-                        strcpy(temp, result);
-                        free(result);
-                        size *= 2;
-                        result = malloc(size);
-                        strcpy(result, temp);
-                    }
-                    for(int k = 0; k < length; k++){
-                        result[i] = times_str[k];
-                        i++;
-                    }
-                }
-                if(i + 1 > size){
-                    char temp[i + 1];
-                    strcpy(temp, result);
-                    free(result);
-                    size *= 2;
-                    result = malloc(size);
-                    strcpy(result, temp);
-                }
-                result[i] = last;
-                i++;
-                last = newc;
-                times = 1;
-            }
-        }
-        if(times > 1){
-            int temp = times, length = 0;
-            while(temp){
-                temp/=10;
-                length++;
-            }
-            char times_str[length + 1];
-            sprintf(times_str, "%d", times);
-            if(length + i > size){
-                char temp[i + 1];
-                strcpy(temp, result);
-                free(result);
-                size *= 2;
-                result = malloc(size);
-                strcpy(result, temp);
-            }
-            for(int k = 0; k < length; k++){
-                result[i] = times_str[k];
-                i++;
-            }
-        }
-        if(i + 1 > size){
-            char temp[i + 1];
-            strcpy(temp, result);
-            free(result);
-            size *= 2;
-            result = malloc(size);
-            strcpy(result, temp);
-        }
-        result[i] = last;
-        i++;
-        if(x != max_x){
-            if(i + 1 > size){
-                char temp[i + 1];
-                strcpy(temp, result);
-                free(result);
-                size *= 2;
-                result = malloc(size);
-                strcpy(result, temp);
-            }
-            result[i] = '$';
-            i++;
-        }
-    }
-    if(i + 1 > size){
-        char temp[i + 1];
-        strcpy(temp, result);
-        free(result);
-        size += 1;
-        result = malloc(size);
-        strcpy(result, temp);
-    }
-    result[i] = '\0';
-    return result;
-}
-
 List life_evolve_many(LifeState state, int steps, ListNode* loop){
     List list_with_states = list_create((DestroyFunc)life_destroy);  //List containing all states
     *loop = NULL;    //Set loop to NULL
@@ -354,6 +360,11 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
     char continue_checking = 1;
     char* rle = NULL;
     for(int i = 1; i < steps; i++){
+        if(map_size(new_state) == 0){  //If new state is blank
+            life_destroy(new_state);
+            map_destroy(rles);
+            return list_with_states;
+        }
         if(continue_checking){
             rle = RLE_to_String(new_state);   //Get RLE of the new state
             MapNode similar_node;
@@ -361,12 +372,6 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
                 list_insert_next(list_with_states, list_last(list_with_states), new_state); //Insert LifeState in list with states
                 map_insert(rles, strdup(rle), list_last(list_with_states)); //Insert ListNode with its RLE as id
             }else{
-                if(map_size(new_state) == 0){  //If new state is blank
-                    free(rle);
-                    life_destroy(new_state);
-                    map_destroy(rles);
-                    return list_with_states;
-                }
                 ListNode similar_list_node = map_node_value(rles, similar_node);    //Map contains list_nodes
                 LifeState similar_life_state = list_node_value(list_with_states, similar_list_node);      //Convert list_node to LifeState
 
@@ -411,18 +416,17 @@ List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* lo
     LifeState new_state = life_evolve(state); //Evolve to the next state
     char* rle = NULL;
     for(int i = 1; i < steps; i++){
+            if(map_size(new_state) == 0){  //If new state is blank
+                life_destroy(new_state);
+                map_destroy(rles);
+                return list_with_states;
+            }
             rle = RLE_to_String(new_state);   //Get RLE of this state
             MapNode similar_node;
             if((similar_node = map_find_node(rles, rle)) == MAP_EOF){   //Check if there is a ListNode with the same RLE in the map
                 list_insert_next(list_with_states, list_last(list_with_states), new_state); //Insert LifeState in list with states
                 map_insert(rles, strdup(rle), list_last(list_with_states)); //Insert ListNode with its RLE as id
             }else{
-                if(map_size(new_state) == 0){  //If new state is blank
-                    free(rle);
-                    life_destroy(new_state);
-                    map_destroy(rles);
-                    return list_with_states;
-                }
                 ListNode similar_list_node = map_node_value(rles, similar_node);    //Map contains list_nodes
                 LifeState similar_life_state = list_node_value(list_with_states, similar_list_node);      //Convert list_node to LifeState
 
