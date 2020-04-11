@@ -361,7 +361,7 @@ List life_evolve_many(LifeState state, int steps, ListNode* loop){
     char* rle = NULL;
     for(int i = 1; i < steps; i++){
         if(map_size(new_state) == 0){  //If new state is blank
-            life_destroy(new_state);
+            list_insert_next(list_with_states, list_last(list_with_states), new_state);
             map_destroy(rles);
             return list_with_states;
         }
@@ -417,7 +417,7 @@ List life_evolve_many_with_displacement(LifeState state, int steps, ListNode* lo
     char* rle = NULL;
     for(int i = 1; i < steps; i++){
             if(map_size(new_state) == 0){  //If new state is blank
-                life_destroy(new_state);
+                list_insert_next(list_with_states, list_last(list_with_states), new_state);
                 map_destroy(rles);
                 return list_with_states;
             }
